@@ -738,6 +738,9 @@ function startFirestoreListeners(){
     fsDb.collection(FS_COLLECTION).doc(d.id).onSnapshot(function(snap){
       if(!STATE.loaded) return;
       if(snap.exists) d.apply(snap.data().value);
+      // Always re-check the lock gate — this is what makes locking/unlocking take effect
+      // live on OTHER devices, not just the one that pressed the button.
+      checkLockGate();
       if(fsSuppressRerender) return;
       rerenderCurrentView();
       applyPermissionUI();
