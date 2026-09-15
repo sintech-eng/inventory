@@ -21,18 +21,22 @@
     --radius:6px;
   }
   *{box-sizing:border-box;}
+  html{ height:100%; }
   body{
     margin:0; background:var(--bg); color:var(--text);
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Tahoma,Arial,sans-serif;
     font-size:14px; line-height:1.45;
+    height:100%; overflow:hidden; /* forces #main to be the only scrolling region — this is what
+    keeps the sidebar and each tab's sticky title/search bar from drifting away on scroll */
   }
   code, .mono{ font-family: ui-monospace, "SF Mono", Consolas, monospace; }
-  #app{ display:flex; min-height:100vh; direction:ltr; }
+  #app{ display:flex; height:100vh; direction:ltr; }
 
   /* ---------- SIDEBAR ---------- */
   #sidebar{
     width:210px; flex:0 0 210px; background:var(--navy); color:#fff;
     display:flex; flex-direction:column; padding:20px 0;
+    height:100vh; overflow-y:auto;
   }
   #sidebar .brand{ padding:14px 16px; border-bottom:1px solid rgba(255,255,255,.12); margin-bottom:14px; }
   #sidebar .brand .name{ font-size:18px; font-weight:700; letter-spacing:.3px; }
@@ -53,9 +57,10 @@
   #sidebar .foot{ margin-top:auto; padding:14px 20px 0; font-size:11px; color:#7C90A6; border-top:1px solid rgba(255,255,255,.1); }
 
   /* ---------- MAIN ---------- */
-  #main{ flex:1; padding:26px 30px; padding-top:70px; overflow-x:hidden; }
+  #main{ flex:1; height:100vh; overflow-y:auto; overflow-x:hidden; padding:26px 30px; padding-top:70px; }
   .view{ display:none; }
   .view.active{ display:block; }
+  .view-header, .sticky-head{ position:sticky; top:0; z-index:10; background:var(--bg); padding-bottom:14px; margin-bottom:6px; }
   h1{ font-size:20px; margin:0 0 4px; color:var(--navy-dark); }
   .subtitle{ color:var(--muted); font-size:13px; margin:0 0 20px; }
 
@@ -163,6 +168,7 @@
   table.rc-table{ width:100%; border-collapse:collapse; margin-bottom:6px; }
   table.rc-table th, table.rc-table td{ border:1px solid var(--text); padding:6px 8px; font-size:12.5px; }
   .ic-cell{ width:100%; border:1px solid #C8D3DD; background:#FFFDF0; padding:4px 5px; font-size:12.5px; text-align:center; border-radius:3px; font-family:inherit; cursor:text; }
+  .ic-date{ min-width:118px; } /* narrower than this and the native date widget's year segment gets too cramped to type into reliably */
   .ic-cell:hover{ border-color:var(--copper); }
   .ic-cell:focus{ border-color:var(--copper); border-width:2px; background:#fff; outline:none; }
   input.ic-formno::placeholder{ color:#B0552A; opacity:.8; font-style:italic; }
@@ -189,8 +195,10 @@
   }
 
   @media (max-width: 880px){
-    #app{ flex-direction:column; }
-    #sidebar{ width:100%; flex:none; flex-direction:row; overflow-x:auto; padding:10px; align-items:center; }
+    body{ height:auto; overflow:auto; }
+    html{ height:auto; }
+    #app{ flex-direction:column; height:auto; min-height:100vh; }
+    #sidebar{ width:100%; flex:none; flex-direction:row; overflow-x:auto; overflow-y:visible; padding:10px; align-items:center; height:auto; }
     #sidebar .brand{ display:none; }
     #sidebar nav{ flex-direction:row; padding:0; }
     #sidebar .foot{ display:none; }
@@ -199,7 +207,8 @@
     #langToggle button img{ width:20px; }
     .cards{ grid-template-columns:repeat(2,1fr); }
     .grid2,.grid3{ grid-template-columns:1fr; }
-    #main{ padding:16px; padding-top:52px; }
+    #main{ height:auto; overflow-y:visible; padding:16px; padding-top:52px; }
+    .view-header, .sticky-head{ position:static; padding-bottom:0; margin-bottom:0; }
   }
   @media (max-width: 520px){
     #topBar{ top:6px; right:6px; padding:4px 5px; gap:4px; border-radius:16px; }
@@ -267,7 +276,7 @@
       <div data-i18n="sidebar_note">Everyone who opens this link shares this data.<br>Sintech For Engineering Supplies &amp; Trade</div>
       <button class="btn ghost sm" id="btnLoadFile" style="margin-top:10px; width:100%; color:#fff; border-color:rgba(255,255,255,.3);" data-i18n="btn_load">📂 Load data file</button>
       <input type="file" id="loadFileInput" accept=".html,.json" style="display:none;">
-      <div style="margin-top:10px; font-size:10px; color:rgba(255,255,255,.45); text-align:center;">Build 2026-09-15 09:02 UTC</div>
+      <div style="margin-top:10px; font-size:10px; color:rgba(255,255,255,.45); text-align:center;">Build 2026-09-15 09:55 UTC</div>
     </div>
   </div>
 
@@ -290,12 +299,14 @@
 
     <!-- ITEMS -->
     <div class="view" id="view-items">
-      <h1 data-i18n="items_title">Items</h1>
-      <p class="subtitle" data-i18n="items_subtitle">Every product has one unique code — stock is calculated automatically from movements</p>
-      <div class="toolbar">
-        <input class="search" id="itemSearch" data-i18n-ph="search_items_ph" placeholder="Search by code or name...">
-        <select id="itemCatFilter"></select>
-        <button class="btn" id="btnAddItem" data-i18n="btn_add_item">+ Add Item</button>
+      <div class="sticky-head">
+        <h1 data-i18n="items_title">Items</h1>
+        <p class="subtitle" data-i18n="items_subtitle">Every product has one unique code — stock is calculated automatically from movements</p>
+        <div class="toolbar">
+          <input class="search" id="itemSearch" data-i18n-ph="search_items_ph" placeholder="Search by code or name...">
+          <select id="itemCatFilter"></select>
+          <button class="btn" id="btnAddItem" data-i18n="btn_add_item">+ Add Item</button>
+        </div>
       </div>
       <div class="panel" style="padding:0;">
         <table>
@@ -332,9 +343,15 @@
           </div>
         </div>
 
-        <div class="field" id="txSupplierRefField" style="margin-bottom:14px; max-width:320px;">
-          <label data-i18n="lbl_supplier_ref">Supplier Reference No. (optional)</label>
-          <input id="txSupplierRefNo" class="mono" data-i18n-ph="ph_supplier_ref" placeholder="Optional">
+        <div class="grid2" id="txSupplierRefField" style="margin-bottom:14px; max-width:660px;">
+          <div class="field">
+            <label data-i18n="lbl_supplier_ref">Supplier Reference No. (optional)</label>
+            <input id="txSupplierRefNo" class="mono" data-i18n-ph="ph_supplier_ref" placeholder="Optional">
+          </div>
+          <div class="field">
+            <label data-i18n="lbl_supplier_invoice">Supplier Invoice No. (optional)</label>
+            <input id="txSupplierInvoiceNo" class="mono" data-i18n-ph="ph_supplier_invoice" placeholder="Optional">
+          </div>
         </div>
 
         <div class="grid3" style="margin-bottom:14px;">
@@ -379,14 +396,16 @@
 
     <!-- RECEIPTS (reconciliation view) -->
     <div class="view" id="view-receipts">
-      <h1 data-i18n="receipts_title">Receipts</h1>
-      <p class="subtitle" data-i18n="receipts_subtitle">Look up a receipt by its number and compare it with your paper copy</p>
-      <div class="toolbar">
-        <input class="search" id="receiptsSearch" data-i18n-ph="receipts_search_ph" placeholder="Enter receipt/form number...">
-        <label style="display:flex; align-items:center; gap:6px; font-size:13px; color:var(--muted);">
-          <input type="checkbox" id="receiptsUnverifiedOnly" style="width:auto;">
-          <span data-i18n="filter_unverified_only">Show unverified only</span>
-        </label>
+      <div class="sticky-head">
+        <h1 data-i18n="receipts_title">Receipts</h1>
+        <p class="subtitle" data-i18n="receipts_subtitle">Look up a receipt by its number and compare it with your paper copy</p>
+        <div class="toolbar">
+          <input class="search" id="receiptsSearch" data-i18n-ph="receipts_search_ph" placeholder="Enter receipt/form number...">
+          <label style="display:flex; align-items:center; gap:6px; font-size:13px; color:var(--muted);">
+            <input type="checkbox" id="receiptsUnverifiedOnly" style="width:auto;">
+            <span data-i18n="filter_unverified_only">Show unverified only</span>
+          </label>
+        </div>
       </div>
       <div id="receiptsSummary" style="font-size:12.5px; color:var(--muted); margin-bottom:14px;"></div>
       <div id="receiptsList"></div>
@@ -394,9 +413,10 @@
 
     <!-- REPORTS -->
     <div class="view" id="view-reports">
-      <h1 data-i18n="reports_title">Reports</h1>
-      <p class="subtitle" data-i18n="reports_subtitle">Inventory value, and how every project and client has traded with you</p>
-      <div class="toolbar">
+      <div class="sticky-head">
+        <h1 data-i18n="reports_title">Reports</h1>
+        <p class="subtitle" data-i18n="reports_subtitle">Inventory value, and how every project and client has traded with you</p>
+        <div class="toolbar">
         <button class="btn ghost sm report-tab active" data-report="inventory" data-i18n="report_tab_inventory">Inventory</button>
         <button class="btn ghost sm report-tab" data-report="projects" data-i18n="report_tab_projects">Project Analysis</button>
         <button class="btn ghost sm report-tab" data-report="suppliers" data-i18n="report_tab_suppliers">Supplier Analysis</button>
@@ -626,9 +646,15 @@
         <div class="mono" style="padding:8px 0; font-weight:700;" id="editRcFormNoDisplay"></div>
       </div>
     </div>
-    <div class="field" id="editRcSupplierRefField" style="margin-bottom:14px; max-width:320px;">
-      <label data-i18n="lbl_supplier_ref">Supplier Reference No. (optional)</label>
-      <input id="editRcSupplierRefNo" class="mono" data-i18n-ph="ph_supplier_ref" placeholder="Optional">
+    <div class="grid2" id="editRcSupplierRefField" style="margin-bottom:14px; max-width:660px;">
+      <div class="field">
+        <label data-i18n="lbl_supplier_ref">Supplier Reference No. (optional)</label>
+        <input id="editRcSupplierRefNo" class="mono" data-i18n-ph="ph_supplier_ref" placeholder="Optional">
+      </div>
+      <div class="field">
+        <label data-i18n="lbl_supplier_invoice">Supplier Invoice No. (optional)</label>
+        <input id="editRcSupplierInvoiceNo" class="mono" data-i18n-ph="ph_supplier_invoice" placeholder="Optional">
+      </div>
     </div>
     <div class="grid3" style="margin-bottom:12px;">
       <div class="field" id="editRcProjectField">
@@ -870,6 +896,7 @@ var I18N = {
     lbl_type:"Movement Type", opt_in:"Incoming", opt_out:"Outgoing",
     lbl_party:"Party", opt_in_normal:"Received", opt_in_returned:"Returned", opt_out_client:"External", opt_out_project:"Internal",
     lbl_formno:"Form No.", lbl_supplier_ref:"Supplier Reference No. (optional)", ph_supplier_ref:"Optional",
+    lbl_supplier_invoice:"Supplier Invoice No. (optional)", ph_supplier_invoice:"Optional",
     lbl_party_name_client:"Company Name", lbl_party_name_project:"Project / Site", lbl_client_company_in:"Company / Client Name", lbl_supplier_name:"Supplier Name",
     ph_party_client:"e.g. Habib El Borg Co.", ph_party_project:"e.g. New Steel Plant - Panel Room",
     ph_supplier_hint:"e.g. Bytech", ph_company_hint:"e.g. Global", ph_project_hint:"e.g. RubyRed",
@@ -929,7 +956,9 @@ var I18N = {
 
     nav_users:"Users",
     perm_view_dashboard:"View Dashboard", perm_view_items:"View Items", perm_add_items:"Add Items", perm_edit_items:"Edit Items", perm_delete_items:"Delete Items",
-    perm_new_receipt:"Create Receipts", perm_view_receipts:"View Receipts", perm_edit_receipts:"Edit Receipts", perm_verify_receipts:"Verify Receipts",
+    perm_new_receipt:"Create Receipts", perm_view_receipts:"View Receipts", perm_edit_receipts:"Edit Receipts", perm_verify_receipts:"Verify Receipts", perm_delete_receipts:"Delete Receipts",
+    btn_delete_receipt:"Delete", t_confirm_delete_receipt:"Delete receipt %s entirely? Every item on it will move to the Recycle Bin together.",
+    log_receipt_deleted:"Deleted receipt %s", recycle_kind_receipt:"whole receipt", recycle_kind_history:"single entry",
     perm_view_reports:"View Reports", perm_reclassify_reports:"Reclassify Projects/Suppliers",
     perm_view_history:"View History", perm_delete_history:"Delete History Entries",
     perm_manage_recycle_bin:"Manage Recycle Bin",
@@ -1016,6 +1045,7 @@ var I18N = {
     lbl_type:"نوع الحركة", opt_in:"الوارد", opt_out:"الصادر",
     lbl_party:"الجهة", opt_in_normal:"وارد", opt_in_returned:"مرتد", opt_out_client:"خارجي", opt_out_project:"داخلي",
     lbl_formno:"رقم الإذن", lbl_supplier_ref:"رقم إذن المورد (اختياري)", ph_supplier_ref:"اختياري",
+    lbl_supplier_invoice:"رقم فاتورة المورد (اختياري)", ph_supplier_invoice:"اختياري",
     lbl_party_name_client:"اسم الشركة", lbl_party_name_project:"المشروع / الموقع", lbl_client_company_in:"اسم الشركة/العميل", lbl_supplier_name:"اسم المورد",
     ph_party_client:"مثال: م. حبيب البرج", ph_party_project:"مثال: مصنع الحديد الجديد - غرفة اللوحات",
     ph_supplier_hint:"مثال: جيلا", ph_company_hint:"مثال: جلوبال", ph_project_hint:"مثال: روبيرد البرج",
@@ -1075,7 +1105,9 @@ var I18N = {
 
     nav_users:"المستخدمين",
     perm_view_dashboard:"عرض لوحة المتابعة", perm_view_items:"عرض الأصناف", perm_add_items:"إضافة أصناف", perm_edit_items:"تعديل أصناف", perm_delete_items:"حذف أصناف",
-    perm_new_receipt:"إنشاء إذونات", perm_view_receipts:"عرض الإذونات", perm_edit_receipts:"تعديل الإذونات", perm_verify_receipts:"مطابقة الإذونات",
+    perm_new_receipt:"إنشاء إذونات", perm_view_receipts:"عرض الإذونات", perm_edit_receipts:"تعديل الإذونات", perm_verify_receipts:"مطابقة الإذونات", perm_delete_receipts:"حذف الإذونات",
+    btn_delete_receipt:"حذف", t_confirm_delete_receipt:"حذف الإذن %s بالكامل؟ سينتقل كل صنف فيه إلى سلة المحذوفات معًا.",
+    log_receipt_deleted:"تم حذف الإذن %s", recycle_kind_receipt:"إذن كامل", recycle_kind_history:"عنصر واحد",
     perm_view_reports:"عرض التقارير", perm_reclassify_reports:"إعادة تصنيف المشاريع/الموردين",
     perm_view_history:"عرض السجل", perm_delete_history:"حذف عناصر السجل",
     perm_manage_recycle_bin:"إدارة سلة المحذوفات",
@@ -1162,6 +1194,7 @@ var I18N = {
     lbl_type:"Hareket Türü", opt_in:"Giriş", opt_out:"Çıkış",
     lbl_party:"Taraf", opt_in_normal:"Giriş", opt_in_returned:"İade", opt_out_client:"Dış", opt_out_project:"İç",
     lbl_formno:"Fiş No.", lbl_supplier_ref:"Tedarikçi Referans No. (isteğe bağlı)", ph_supplier_ref:"İsteğe bağlı",
+    lbl_supplier_invoice:"Tedarikçi Fatura No. (isteğe bağlı)", ph_supplier_invoice:"İsteğe bağlı",
     lbl_party_name_client:"Şirket Adı", lbl_party_name_project:"Proje / Saha", lbl_client_company_in:"Şirket / Müşteri Adı", lbl_supplier_name:"Tedarikçi Adı",
     ph_party_client:"örn. Habib El Borg Şti.", ph_party_project:"örn. Yeni Çelik Fabrikası - Pano Odası",
     ph_supplier_hint:"örn. Bytech", ph_company_hint:"örn. Global", ph_project_hint:"örn. RubyRed",
@@ -1221,7 +1254,9 @@ var I18N = {
 
     nav_users:"Kullanıcılar",
     perm_view_dashboard:"Paneli Görüntüle", perm_view_items:"Ürünleri Görüntüle", perm_add_items:"Ürün Ekle", perm_edit_items:"Ürün Düzenle", perm_delete_items:"Ürün Sil",
-    perm_new_receipt:"Fiş Oluştur", perm_view_receipts:"Fişleri Görüntüle", perm_edit_receipts:"Fişleri Düzenle", perm_verify_receipts:"Fişleri Doğrula",
+    perm_new_receipt:"Fiş Oluştur", perm_view_receipts:"Fişleri Görüntüle", perm_edit_receipts:"Fişleri Düzenle", perm_verify_receipts:"Fişleri Doğrula", perm_delete_receipts:"Fişleri Sil",
+    btn_delete_receipt:"Sil", t_confirm_delete_receipt:"%s fişi tamamen silinsin mi? Üzerindeki tüm ürünler birlikte Geri Dönüşüm Kutusuna taşınacak.",
+    log_receipt_deleted:"%s fişi silindi", recycle_kind_receipt:"tüm fiş", recycle_kind_history:"tek kayıt",
     perm_view_reports:"Raporları Görüntüle", perm_reclassify_reports:"Proje/Tedarikçi Yeniden Sınıflandır",
     perm_view_history:"Geçmişi Görüntüle", perm_delete_history:"Geçmiş Kayıtlarını Sil",
     perm_manage_recycle_bin:"Geri Dönüşüm Kutusunu Yönet",
@@ -1856,6 +1891,7 @@ function renderNewTxDefaults(){
   document.getElementById("txDate").value = todayISO();
   document.getElementById("txFormNo").value = String(STATE.meta.formCounter);
   document.getElementById("txSupplierRefNo").value = "";
+  document.getElementById("txSupplierInvoiceNo").value = "";
   document.getElementById("txProjectName").value = "";
   document.getElementById("txClientName").value = "";
   document.getElementById("txRecipient").value = "";
@@ -2059,6 +2095,7 @@ document.getElementById("btnSaveTx").addEventListener("click", async function(){
     document.getElementById("txClientName").value.trim());
   var partyType = resolved.partyType, inSubType = resolved.inSubType, partyName = resolved.partyName;
   var supplierRefNo = document.getElementById("txSupplierRefNo").value.trim();
+  var supplierInvoiceNo = document.getElementById("txSupplierInvoiceNo").value.trim();
   var formNo = document.getElementById("txFormNo").value.trim();
   var date = document.getElementById("txDate").value;
   var recipient = document.getElementById("txRecipient").value.trim();
@@ -2088,7 +2125,7 @@ document.getElementById("btnSaveTx").addEventListener("click", async function(){
   var actionId = "ACT-" + Date.now();
   var actionLines = lines.map(function(l){ return Object.assign({}, l, {actionId: actionId}); });
   var action = { id:actionId, formNo:formNo, date:date||todayISO(), type:type, partyType:partyType, inSubType:inSubType,
-    supplierRefNo:supplierRefNo, partyName:partyName, recipientName:recipient, notes:notes, lines:actionLines, createdAt:Date.now() };
+    supplierRefNo:supplierRefNo, supplierInvoiceNo:supplierInvoiceNo, partyName:partyName, recipientName:recipient, notes:notes, lines:actionLines, createdAt:Date.now() };
   STATE.actions.push(action);
 
   var existing = STATE.tx.find(function(x){ return String(x.formNo).trim()===formNo; });
@@ -2098,6 +2135,7 @@ document.getElementById("btnSaveTx").addEventListener("click", async function(){
     if(notes) existing.notes = existing.notes ? (existing.notes + " | " + notes) : notes;
     if(recipient && !existing.recipientName) existing.recipientName = recipient;
     if(supplierRefNo && !existing.supplierRefNo) existing.supplierRefNo = supplierRefNo;
+    if(supplierInvoiceNo && !existing.supplierInvoiceNo) existing.supplierInvoiceNo = supplierInvoiceNo;
     var numericNo2 = parseInt(formNo,10);
     if(!isNaN(numericNo2) && numericNo2>=STATE.meta.formCounter) STATE.meta.formCounter = numericNo2+1;
     // Show feedback and the printed page immediately — don't make the person wait on the network
@@ -2111,7 +2149,7 @@ document.getElementById("btnSaveTx").addEventListener("click", async function(){
   }
 
   var tx = { id: "TX-"+Date.now(), formNo:formNo, date:date||todayISO(), type:type, partyType:partyType, inSubType:inSubType,
-    supplierRefNo:supplierRefNo, partyName:partyName, recipientName:recipient, responsibleName:"", notes:notes, lines:actionLines, createdAt:Date.now() };
+    supplierRefNo:supplierRefNo, supplierInvoiceNo:supplierInvoiceNo, partyName:partyName, recipientName:recipient, responsibleName:"", notes:notes, lines:actionLines, createdAt:Date.now() };
   STATE.tx.push(tx);
 
   var numericNo = parseInt(formNo,10);
@@ -2161,6 +2199,7 @@ function renderReceiptsTab(){
           (tx.verified ? '<span class="status ok">'+t("lbl_verified")+'</span>' : '<span class="status low">'+t("lbl_not_verified")+'</span>')+
           '<button class="btn ghost sm" data-toggleverify="'+esc(tx.id)+'">'+(tx.verified? t("btn_unmark_verified") : t("btn_mark_verified"))+'</button>'+
           '<button class="btn ghost sm" data-editrc="'+esc(tx.id)+'">'+t("btn_edit_receipt")+'</button>'+
+          '<button class="btn ghost sm" data-delrc="'+esc(tx.id)+'" style="color:var(--out); border-color:var(--out);">'+t("btn_delete_receipt")+'</button>'+
           '<button class="btn ghost sm" data-openrc="'+esc(tx.id)+'">'+t("link_open")+'</button>'+
         '</div>'+
       '</div>'+
@@ -2170,6 +2209,7 @@ function renderReceiptsTab(){
 
   container.querySelectorAll("[data-openrc]").forEach(function(el){ el.addEventListener("click", function(){ openReceipt(el.dataset.openrc); }); });
   container.querySelectorAll("[data-editrc]").forEach(function(el){ el.addEventListener("click", function(){ if(requirePermission("editReceipts")) openEditReceiptModal(el.dataset.editrc); }); });
+  container.querySelectorAll("[data-delrc]").forEach(function(el){ el.addEventListener("click", function(){ deleteReceipt(el.dataset.delrc); }); });
   container.querySelectorAll("[data-toggleverify]").forEach(function(el){
     el.addEventListener("click", async function(){
       if(!requirePermission("verifyReceipts")) return;
@@ -2200,6 +2240,7 @@ function openEditReceiptModal(txId){
   document.getElementById("editRcParty").value = (tx.type === "OUT") ? (tx.partyType || "client") : (tx.inSubType || "normal");
   updateFieldVisibilityFor("editRc");
   document.getElementById("editRcSupplierRefNo").value = tx.supplierRefNo || "";
+  document.getElementById("editRcSupplierInvoiceNo").value = tx.supplierInvoiceNo || "";
   if(tx.type === "OUT" && tx.partyType === "project"){
     document.getElementById("editRcProjectName").value = tx.partyName || "";
     document.getElementById("editRcClientName").value = "";
@@ -2317,6 +2358,7 @@ document.getElementById("editReceiptSaveBtn").addEventListener("click", async fu
     document.getElementById("editRcClientName").value.trim());
   var partyType = resolved.partyType, inSubType = resolved.inSubType, partyName = resolved.partyName;
   var supplierRefNo = document.getElementById("editRcSupplierRefNo").value.trim();
+  var supplierInvoiceNo = document.getElementById("editRcSupplierInvoiceNo").value.trim();
   var date = document.getElementById("editRcDate").value;
   var recipient = document.getElementById("editRcRecipient").value.trim();
   var notes = document.getElementById("editRcNotes").value.trim();
@@ -2341,6 +2383,7 @@ document.getElementById("editReceiptSaveBtn").addEventListener("click", async fu
   tx.partyType = partyType;
   tx.inSubType = inSubType;
   tx.supplierRefNo = supplierRefNo;
+  tx.supplierInvoiceNo = supplierInvoiceNo;
   tx.partyName = partyName;
   tx.recipientName = recipient;
   tx.date = date || tx.date;
@@ -2885,10 +2928,11 @@ function renderRecycleBin(){
     return;
   }
   body.innerHTML = list.map(function(rb){
-    var a = rb.action;
+    var a = rb.action || rb.receipt.tx;
+    var kindLabel = rb.receipt ? t("recycle_kind_receipt") : t("recycle_kind_history");
     return '<tr>'+
       '<td class="mono">'+esc(a.formNo)+'</td>'+
-      '<td>'+esc(a.partyName)+'</td>'+
+      '<td>'+esc(a.partyName)+' <span style="color:var(--muted); font-size:11px;">('+kindLabel+')</span></td>'+
       '<td>'+a.lines.length+'</td>'+
       '<td>'+esc(new Date(rb.deletedAt).toLocaleString())+'</td>'+
       '<td>'+esc(rb.deletedByName)+'</td>'+
@@ -2906,6 +2950,23 @@ async function restoreFromRecycleBin(rbId){
   if(!requirePermission("manageRecycleBin")) return;
   var entry = STATE.recycleBin.find(function(e){ return e.id===rbId; });
   if(!entry) return;
+
+  if(entry.receipt){
+    // Whole-receipt delete: put the page back exactly as it was, plus any of its actions that
+    // were removed with it, rather than treating it as a single merged-in action.
+    var tx = entry.receipt.tx;
+    STATE.tx.push(tx);
+    entry.receipt.actions.forEach(function(a){ STATE.actions.push(a); });
+    var numericNoR = parseInt(tx.formNo,10);
+    if(!isNaN(numericNoR) && numericNoR>=STATE.meta.formCounter) STATE.meta.formCounter = numericNoR+1;
+    STATE.recycleBin = STATE.recycleBin.filter(function(e){ return e.id!==rbId; });
+    logActivity("recycle_restore", tf("log_recycle_restored", tx.formNo));
+    renderReceiptsTab();
+    toast(t("t_restored"));
+    Promise.all([saveActions(), saveTx(), saveMeta(), saveRecycleBin()]).catch(function(e){ console.error("Background save failed:", e); });
+    return;
+  }
+
   var action = entry.action;
   STATE.actions.push(action);
   var dest = STATE.tx.find(function(x){ return String(x.formNo).trim()===String(action.formNo).trim(); });
@@ -2930,10 +2991,32 @@ async function purgeFromRecycleBin(rbId){
   if(!confirm(t("t_confirm_purge"))) return;
   var entry = STATE.recycleBin.find(function(e){ return e.id===rbId; });
   STATE.recycleBin = STATE.recycleBin.filter(function(e){ return e.id!==rbId; });
-  logActivity("recycle_purge", tf("log_recycle_purged", entry ? entry.action.formNo : rbId));
+  var formNoForLog = entry ? (entry.action ? entry.action.formNo : entry.receipt.tx.formNo) : rbId;
+  logActivity("recycle_purge", tf("log_recycle_purged", formNoForLog));
   renderRecycleBin();
   toast(t("t_purged"));
   saveRecycleBin().catch(function(e){ console.error("Background save failed:", e); });
+}
+// Deletes an entire receipt page (all its items at once), moving it — and any of its History
+// actions — into the Recycle Bin together, so an accidental delete can be undone as one unit.
+async function deleteReceipt(txId){
+  if(!requirePermission("deleteReceipts")) return;
+  var tx = STATE.tx.find(function(x){ return x.id===txId; });
+  if(!tx) return;
+  if(!confirm(tf("t_confirm_delete_receipt", tx.formNo))) return;
+  var relatedActions = STATE.actions.filter(function(a){ return String(a.formNo).trim()===String(tx.formNo).trim(); });
+  STATE.tx = STATE.tx.filter(function(x){ return x.id!==txId; });
+  STATE.actions = STATE.actions.filter(function(a){ return String(a.formNo).trim()!==String(tx.formNo).trim(); });
+  STATE.recycleBin.push({
+    id: "RB-"+Date.now()+"-"+Math.random().toString(36).slice(2,7),
+    deletedAt: Date.now(),
+    deletedByName: currentUser ? currentUser.name : t("system_user_label"),
+    receipt: { tx: tx, actions: relatedActions }
+  });
+  logActivity("receipt_delete", tf("log_receipt_deleted", tx.formNo));
+  renderReceiptsTab();
+  toast(t("t_moved_to_recycle_bin"));
+  Promise.all([saveTx(), saveActions(), saveRecycleBin()]).catch(function(e){ console.error("Background save failed:", e); });
 }
 
 // ---------------- RECEIPT / PRINT (always bilingual, matches the original paper form) ----------------
@@ -3280,6 +3363,7 @@ var PERMISSIONS = [
   { key:"viewReceipts", label:"perm_view_receipts" },
   { key:"editReceipts", label:"perm_edit_receipts" },
   { key:"verifyReceipts", label:"perm_verify_receipts" },
+  { key:"deleteReceipts", label:"perm_delete_receipts" },
   { key:"viewReports", label:"perm_view_reports" },
   { key:"reclassifyReports", label:"perm_reclassify_reports" },
   { key:"viewHistory", label:"perm_view_history" },
