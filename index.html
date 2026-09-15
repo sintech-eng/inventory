@@ -102,7 +102,7 @@
   button.btn.copper{ background:var(--copper); }
   button.btn.copper:hover{ background:var(--copper-dark); }
   button.btn.ghost{ background:transparent; color:var(--navy); border:1px solid var(--border); }
-  button.report-tab.active{ background:var(--navy); color:#fff; border-color:var(--navy); }
+  button.report-tab.active, button.settings-tab.active, button.party-kind-tab.active, button.receipts-kind-tab.active{ background:var(--navy); color:#fff; border-color:var(--navy); }
   button.btn.ghost:hover{ background:#EEF1F4; }
   button.btn.danger{ background:#fff; color:var(--out); border:1px solid #F1C7C7; }
   button.btn.danger:hover{ background:#FBE5E5; }
@@ -285,7 +285,7 @@
       <div data-i18n="sidebar_note">Everyone who opens this link shares this data.<br>Sintech For Engineering Supplies &amp; Trade</div>
       <button class="btn ghost sm" id="btnLoadFile" style="margin-top:10px; width:100%; color:#fff; border-color:rgba(255,255,255,.3);" data-i18n="btn_load">📂 Load data file</button>
       <input type="file" id="loadFileInput" accept=".html,.json" style="display:none;">
-      <div style="margin-top:10px; font-size:10px; color:rgba(255,255,255,.45); text-align:center;">Build 2026-09-15 15:09 UTC</div>
+      <div style="margin-top:10px; font-size:10px; color:rgba(255,255,255,.45); text-align:center;">Build 2026-09-15 20:30 UTC</div>
     </div>
   </div>
 
@@ -366,11 +366,11 @@
         <div class="grid3" style="margin-bottom:14px;">
           <div class="field" id="txProjectField">
             <label data-i18n="lbl_party_name_project">Project / Site</label>
-            <input id="txProjectName" placeholder="e.g. RubyRed">
+            <select id="txProjectName"><option value="" data-i18n="opt_select_party">— Select —</option></select>
           </div>
           <div class="field" id="txClientField">
             <label id="txClientLbl" data-i18n="lbl_party_name_client">Company Name</label>
-            <input id="txClientName" placeholder="e.g. Bytech">
+            <select id="txClientName"><option value="" data-i18n="opt_select_party">— Select —</option></select>
           </div>
           <div class="field">
             <label data-i18n="lbl_date">Date</label>
@@ -408,6 +408,10 @@
       <div class="sticky-head">
         <h1 data-i18n="receipts_title">Receipts</h1>
         <p class="subtitle" data-i18n="receipts_subtitle">Look up a receipt by its number and compare it with your paper copy</p>
+        <div class="toolbar" id="receiptsKindTabs">
+          <button class="btn ghost sm receipts-kind-tab active" data-receiptskind="addition" data-i18n="nav_addition_notes">Addition Notes</button>
+          <button class="btn ghost sm receipts-kind-tab" data-receiptskind="receipt" data-i18n="nav_receipt_notes">Receipt Notes</button>
+        </div>
         <div class="toolbar">
           <input class="search" id="receiptsSearch" data-i18n-ph="receipts_search_ph" placeholder="Enter receipt/form number...">
           <label style="display:flex; align-items:center; gap:6px; font-size:13px; color:var(--muted);">
@@ -437,6 +441,7 @@
         <div class="cards" id="invReportCards"></div>
         <div class="toolbar">
           <input class="search" id="invReportSearch" data-i18n-ph="search_items_ph" placeholder="Search by code or name...">
+          <button class="btn ghost sm" id="btnExportInventory" style="margin-inline-start:auto;">📊 <span data-i18n="btn_export_excel">Export to Excel</span></button>
         </div>
         <div class="panel" style="padding:0;">
           <table>
@@ -451,6 +456,7 @@
 
       <div id="reportProjects" style="display:none;">
         <div class="cards" id="projReportCards"></div>
+        <div class="toolbar"><button class="btn ghost sm" id="btnExportProjects" style="margin-inline-start:auto;">📊 <span data-i18n="btn_export_excel">Export to Excel</span></button></div>
         <div class="panel" style="padding:0;">
           <table>
             <thead><tr>
@@ -464,6 +470,7 @@
 
       <div id="reportSuppliers" style="display:none;">
         <div class="cards" id="supplierReportCards"></div>
+        <div class="toolbar"><button class="btn ghost sm" id="btnExportSuppliers" style="margin-inline-start:auto;">📊 <span data-i18n="btn_export_excel">Export to Excel</span></button></div>
         <div class="panel" style="padding:0; overflow-x:auto;">
           <table>
             <thead><tr>
@@ -479,6 +486,7 @@
 
       <div id="reportReturns" style="display:none;">
         <div class="cards" id="returnsReportCards"></div>
+        <div class="toolbar"><button class="btn ghost sm" id="btnExportReturns" style="margin-inline-start:auto;">📊 <span data-i18n="btn_export_excel">Export to Excel</span></button></div>
         <div class="panel" style="padding:0; overflow-x:auto;">
           <table>
             <thead><tr>
@@ -566,31 +574,56 @@
       <h1 data-i18n="settings_title">Control Panel</h1>
       <p class="subtitle" data-i18n="settings_subtitle">Manage the categories and units used across the app, without needing a code change</p>
 
-      <h2 style="font-size:16px; margin:6px 0 10px; color:var(--navy-dark);" data-i18n="settings_categories_title">Categories</h2>
-      <p class="subtitle" data-i18n="settings_categories_subtitle" style="margin-top:-6px;">Each category is tied to one or more code prefixes — an item's prefix decides its category automatically.</p>
       <div class="toolbar">
-        <input id="newCatPrefix" class="mono" data-i18n-ph="ph_new_cat_prefix" placeholder="Prefix, e.g. NW" style="max-width:140px; text-transform:uppercase;" maxlength="6">
-        <input id="newCatName" data-i18n-ph="ph_new_cat_name" placeholder="Category name" style="max-width:220px;">
-        <button class="btn" id="btnAddCategory" data-i18n="btn_add_category">+ Add Category</button>
-      </div>
-      <div class="panel" style="padding:0;">
-        <table>
-          <thead><tr><th data-i18n="th_cat_prefix">Prefix</th><th data-i18n="th_cat_name">Category</th><th data-i18n="th_cat_items">Items</th><th></th></tr></thead>
-          <tbody id="categoryMapBody"></tbody>
-        </table>
+        <button class="btn ghost sm settings-tab active" data-settingstab="categories" data-i18n="settings_categories_title">Categories</button>
+        <button class="btn ghost sm settings-tab" data-settingstab="units" data-i18n="settings_units_title">Units</button>
+        <button class="btn ghost sm settings-tab" data-settingstab="parties" data-i18n="settings_parties_title">Suppliers, Clients &amp; Projects</button>
       </div>
 
-      <h2 style="font-size:16px; margin:22px 0 10px; color:var(--navy-dark);" data-i18n="settings_units_title">Units</h2>
-      <p class="subtitle" data-i18n="settings_units_subtitle" style="margin-top:-6px;">The standard 5 units (Meter, Piece, Roll, Packet, Box) are always available — add more here if you need one they don't cover.</p>
-      <div class="toolbar">
-        <input id="newUnitCode" class="mono" data-i18n-ph="ph_new_unit" placeholder="e.g. KG" style="max-width:140px; text-transform:uppercase;" maxlength="10">
-        <button class="btn" id="btnAddUnit" data-i18n="btn_add_unit">+ Add Unit</button>
+      <div id="settingsCategories">
+        <p class="subtitle" data-i18n="settings_categories_subtitle" style="margin-top:-6px;">Each category is tied to one or more code prefixes — an item's prefix decides its category automatically.</p>
+        <div class="toolbar">
+          <input id="newCatPrefix" class="mono" data-i18n-ph="ph_new_cat_prefix" placeholder="Prefix, e.g. NW" style="max-width:140px; text-transform:uppercase;" maxlength="6">
+          <input id="newCatName" data-i18n-ph="ph_new_cat_name" placeholder="Category name" style="max-width:220px;">
+          <button class="btn" id="btnAddCategory" data-i18n="btn_add_category">+ Add Category</button>
+        </div>
+        <div class="panel" style="padding:0;">
+          <table>
+            <thead><tr><th data-i18n="th_cat_prefix">Prefix</th><th data-i18n="th_cat_name">Category</th><th data-i18n="th_cat_items">Items</th><th></th></tr></thead>
+            <tbody id="categoryMapBody"></tbody>
+          </table>
+        </div>
       </div>
-      <div class="panel" style="padding:0;">
-        <table>
-          <thead><tr><th data-i18n="th_unit_code">Unit</th><th data-i18n="th_unit_name">Name</th><th data-i18n="th_cat_items">Items</th><th></th></tr></thead>
-          <tbody id="customUnitsBody"></tbody>
-        </table>
+
+      <div id="settingsUnits" style="display:none;">
+        <p class="subtitle" data-i18n="settings_units_subtitle" style="margin-top:-6px;">The standard 5 units (Meter, Piece, Roll, Packet, Box) are always available — add more here if you need one they don't cover.</p>
+        <div class="toolbar">
+          <input id="newUnitCode" class="mono" data-i18n-ph="ph_new_unit" placeholder="e.g. KG" style="max-width:140px; text-transform:uppercase;" maxlength="10">
+          <button class="btn" id="btnAddUnit" data-i18n="btn_add_unit">+ Add Unit</button>
+        </div>
+        <div class="panel" style="padding:0;">
+          <table>
+            <thead><tr><th data-i18n="th_unit_code">Unit</th><th data-i18n="th_unit_name">Name</th><th data-i18n="th_cat_items">Items</th><th></th></tr></thead>
+            <tbody id="customUnitsBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="settingsParties" style="display:none;">
+        <p class="subtitle" data-i18n="settings_parties_subtitle" style="margin-top:-6px;">Built automatically from your receipts. One entry per real company — the same name can be used as a supplier, a client, or a project at different times.</p>
+        <div class="toolbar" style="flex-wrap:wrap;">
+          <input id="newPartyName" data-i18n-ph="ph_new_party_name" placeholder="Name" style="max-width:260px;">
+          <label style="display:flex; align-items:center; gap:5px; font-size:13px; font-weight:400;"><input type="checkbox" id="newPartyRoleSupplier"> <span data-i18n="party_kind_supplier">Supplier</span></label>
+          <label style="display:flex; align-items:center; gap:5px; font-size:13px; font-weight:400;"><input type="checkbox" id="newPartyRoleClient"> <span data-i18n="party_kind_client">Client</span></label>
+          <label style="display:flex; align-items:center; gap:5px; font-size:13px; font-weight:400;"><input type="checkbox" id="newPartyRoleProject"> <span data-i18n="party_kind_project">Project</span></label>
+          <button class="btn" id="btnAddParty" data-i18n="btn_add_party">+ Add</button>
+        </div>
+        <div class="panel" style="padding:0;">
+          <table>
+            <thead><tr><th data-i18n="th_party_name">Name</th><th data-i18n="th_party_used_as">Used As</th><th></th></tr></thead>
+            <tbody id="partyDirectoryBody"></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
@@ -648,7 +681,7 @@
     </div>
     <div class="field" style="margin-bottom:16px;">
       <label data-i18n="lbl_user_pin">PIN (4 digits)</label>
-      <input id="signinPin" inputmode="numeric" maxlength="4" placeholder="1234">
+      <input id="signinPin" type="password" inputmode="numeric" maxlength="4" placeholder="1234">
     </div>
     <button class="btn copper" id="btnSignIn" style="width:100%;" data-i18n="btn_sign_in">Sign In</button>
     <div id="signinError" style="color:var(--out); font-size:12.5px; margin-top:10px; text-align:center;"></div>
@@ -674,6 +707,41 @@
         <button class="btn ghost" id="itemCancelBtn" data-i18n="btn_cancel">Cancel</button>
         <button class="btn" id="itemSaveBtn" data-i18n="btn_save">Save</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- PARTY RECEIPTS MODAL — every receipt number involving one supplier/client/project -->
+<div class="modal-backdrop" id="partyReceiptsModalBackdrop">
+  <div class="modal" style="max-width:640px;">
+    <h3 id="partyReceiptsModalTitle">—</h3>
+    <p class="subtitle" data-i18n="party_receipts_subtitle" style="margin-top:-6px;">Every receipt this name appears on, incoming or outgoing.</p>
+    <div class="panel" style="padding:0; max-height:50vh; overflow-y:auto;">
+      <table>
+        <thead><tr>
+          <th data-i18n="th_formno">Form No.</th><th data-i18n="th_date">Date</th><th data-i18n="th_type">Type</th><th data-i18n="th_items">Items</th><th></th>
+        </tr></thead>
+        <tbody id="partyReceiptsBody"></tbody>
+      </table>
+    </div>
+    <div style="display:flex; gap:8px; margin-top:14px;">
+      <button class="btn ghost" id="partyReceiptsCloseBtn" data-i18n="btn_close">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- PARTY MERGE MODAL -->
+<div class="modal-backdrop" id="partyMergeModalBackdrop">
+  <div class="modal" style="max-width:480px;">
+    <h3 data-i18n="party_merge_title">Merge Duplicate</h3>
+    <p class="subtitle" id="partyMergeSubtitle" style="margin-top:-6px;">—</p>
+    <div class="field" style="margin-bottom:14px;">
+      <label data-i18n="party_merge_into_label">Keep this one instead</label>
+      <select id="partyMergeIntoSelect"></select>
+    </div>
+    <div style="display:flex; gap:8px;">
+      <button class="btn ghost" id="partyMergeCancelBtn" data-i18n="btn_cancel">Cancel</button>
+      <button class="btn copper" id="partyMergeConfirmBtn" data-i18n="btn_merge">Merge</button>
     </div>
   </div>
 </div>
@@ -713,11 +781,11 @@
     <div class="grid3" style="margin-bottom:12px;">
       <div class="field" id="editRcProjectField">
         <label data-i18n="lbl_party_name_project">Project / Site</label>
-        <input id="editRcProjectName">
+        <select id="editRcProjectName"><option value="" data-i18n="opt_select_party">— Select —</option></select>
       </div>
       <div class="field" id="editRcClientField">
         <label id="editRcClientLbl" data-i18n="lbl_party_name_client">Company Name</label>
-        <input id="editRcClientName">
+        <select id="editRcClientName"><option value="" data-i18n="opt_select_party">— Select —</option></select>
       </div>
       <div class="field"><label data-i18n="lbl_date">Date</label><input id="editRcDate" type="date"></div>
       <div class="field"><label data-i18n="lbl_recipient">Received By</label><input id="editRcRecipient"></div>
@@ -791,8 +859,9 @@ var K_RECYCLE = "sintech_inv_recyclebin_v1";
 var K_CATEGORYMAP = "sintech_inv_categorymap_v1";
 var K_CUSTOMUNITS = "sintech_inv_customunits_v1";
 var K_UNITS = "sintech_inv_units_v1";
+var K_PARTYDIR = "sintech_inv_partydir_v1";
 
-var STATE = { items: [], tx: [], actions: [], users: [], activityLog: [], recycleBin: [], categoryMap: null, customUnits: [], units: null, meta: { formCounter: 5872, categories: [], locked:false }, loaded:false };
+var STATE = { items: [], tx: [], actions: [], users: [], activityLog: [], recycleBin: [], categoryMap: null, customUnits: [], units: null, partyDirectory: null, meta: { formCounter: 5872, categories: [], locked:false }, loaded:false };
 var LANG = "en";
 var currentItemCardCode = null;
 var currentUser = null; // session-only — never persisted, so locking always requires signing in again
@@ -857,6 +926,26 @@ function seedUnitsWithLegacyCustom(){
   });
   return base;
 }
+// A receipt's party is a Supplier if it's an incoming delivery, a Client if it's sold out, or a
+// Project if it's issued to internal use — this is the same classification the rest of the app
+// already uses for New Receipt and the reports, just named for the directory.
+function classifyPartyKind(txOrAction){
+  if(txOrAction.type === "IN") return "supplier";
+  if(txOrAction.partyType === "client") return "client";
+  return "project";
+}
+// Builds the directory's starting point from whatever party names already exist in real receipts
+// — used once, the first time this app version boots, so nothing has to be typed in from scratch.
+function buildInitialPartyDirectory(){
+  var seen = {}, list = [], counter = 0;
+  STATE.tx.forEach(function(tx){
+    var name = (tx.partyName||"").trim();
+    if(!name || seen[name] || PARTY_NAME_PLACEHOLDERS.indexOf(name)>=0) return;
+    seen[name] = true; counter++;
+    list.push({ id:"PD-"+Date.now()+"-"+counter, name:name });
+  });
+  return list;
+}
 var FS_DOCS = [
   { id:"items", key:K_ITEMS, apply:function(v){ STATE.items = v || []; } },
   { id:"transactions", key:K_TX, apply:function(v){ STATE.tx = v || []; STATE.tx.forEach(function(tx){ if(tx.verified===undefined) tx.verified=false; }); } },
@@ -867,7 +956,8 @@ var FS_DOCS = [
   { id:"recycleBin", key:K_RECYCLE, apply:function(v){ STATE.recycleBin = v || []; } },
   { id:"categoryMap", key:K_CATEGORYMAP, apply:function(v){ STATE.categoryMap = (v && Object.keys(v).length) ? v : DEFAULT_CATEGORY_MAP; } },
   { id:"customUnits", key:K_CUSTOMUNITS, apply:function(v){ STATE.customUnits = v || []; } },
-  { id:"units", key:K_UNITS, apply:function(v){ STATE.units = (v && v.length) ? v : seedUnitsWithLegacyCustom(); } }
+  { id:"units", key:K_UNITS, apply:function(v){ STATE.units = (v && v.length) ? v : seedUnitsWithLegacyCustom(); } },
+  { id:"partyDirectory", key:K_PARTYDIR, apply:function(v){ STATE.partyDirectory = (v && v.length) ? v : buildInitialPartyDirectory(); } }
 ];
 
 // One-time on boot: if Firestore already has data, it wins (it's the shared source of truth).
@@ -952,7 +1042,7 @@ var I18N = {
     empty_no_low:"Every item has enough stock",
     th_formno:"Form No.", th_date:"Date", th_type:"Type", th_party:"Party", th_items:"Items", th_total:"Total", link_open:"Open", link_delete:"Delete",
     type_in:"Received", type_out:"Issued",
-    status_ok:"OK", status_low:"Low", status_out:"Out of stock",
+    status_ok:"In Stock", status_low:"Low", status_out:"Out of stock",
 
     items_title:"Items", items_subtitle:"Every product has one unique code — stock is calculated automatically from movements",
     search_items_ph:"Search by code or name...", cat_filter_all:"All categories",
@@ -991,7 +1081,7 @@ var I18N = {
     btn_close:"Close", btn_print:"🖨 Print",
 
     t_code_name_required:"Code and name are required",
-    t_code_exists:"This code is already used", t_category_required:"Please select a category", opt_select_category:"— Select a category —",
+    t_code_exists:"This code is already used", t_category_required:"Please select a category", opt_select_category:"— Select a category —", opt_select_party:"— Select —", opt_select_user:"— Select your name —",
     t_code_format:"Code must look like ABC-00123 (letters, dash, 5-digit number)",
     t_bulk_badformat:", %s had an invalid code format",
     t_saved:"Saved",
@@ -1024,6 +1114,7 @@ var I18N = {
     report_tab_inventory:"Inventory", report_tab_projects:"Project Analysis", report_tab_clients:"Client Analysis", report_tab_suppliers:"Supplier Analysis", report_tab_returns:"Returned Items",
     th_returned_from:"Returned From", card_total_returned_items:"Items with returns", card_total_returned_qty:"Total returned qty", card_total_returned_value:"Total returned value",
     th_total_value:"Total Value", card_total_value:"Total inventory value", card_unknown_cost:"Items with no purchase price",
+    btn_export_excel:"Export to Excel", t_export_failed:"Couldn't load the Excel export tool — check your connection and try again.",
     th_project_site:"Project / Site", th_receipts_count:"Receipts", th_items_count:"Items", th_total_qty:"Total Qty", th_est_cost:"Estimated Cost",
     card_total_projects:"Total projects", card_total_cost:"Total estimated cost",
     th_client_name:"Client", th_total_revenue:"Total Revenue",
@@ -1045,6 +1136,29 @@ var I18N = {
     ph_new_unit:"e.g. KG", btn_add_unit:"+ Add Unit", th_unit_code:"Unit", th_unit_name:"Name",
     t_unit_name_required:"Please enter a unit name",
     log_category_renamed:"Renamed category %s: \"%s\" -> \"%s\"", log_unit_renamed:"Renamed unit %s to \"%s\"", log_unit_code_renamed:"Renamed unit code %s to %s",
+    settings_parties_title:"Suppliers, Clients &amp; Projects", settings_parties_subtitle:"Built automatically from your receipts. Rename to fix a typo everywhere at once, or merge two entries that are really the same one.",
+    ph_new_party_name:"Name", btn_add_party:"+ Add",
+    party_kind_supplier:"Supplier", party_kind_client:"Client", party_kind_project:"Project", party_kind_all:"All kinds",
+    th_party_name:"Name", th_party_kind:"Kind", th_party_merge:"Merge Into", party_merge_placeholder:"— merge into —",
+    th_party_used_as:"Used As", party_kind_unused:"Not used yet", party_tagged_not_used:"not used yet",
+    btn_view_receipts:"View Receipts", party_receipts_subtitle:"Every receipt this name appears on, incoming or outgoing.",
+    btn_merge:"Merge", party_merge_title:"Merge Duplicate", party_merge_into_label:"Keep this one instead",
+    party_merge_subtitle:"Merging \"%s\" (%s receipt(s)) — it will disappear from the list and every one of its receipts will switch to whichever name you keep.",
+    party_role_locked_hint:"Already has real receipts of this kind — can't be unticked", party_role_added:"tagged", party_role_removed:"untagged",
+    log_party_role_toggled:"%s %s as %s",
+    party_role_cant_remove:"%s already has real %s receipts — that can't be untagged, only added to.",
+    party_needs_review:"New — pick its role(s)", log_party_synced:"Found %s new name(s) in receipts and added them to the directory",
+    empty_no_parties:"No entries yet.",
+    t_party_name_required:"Please enter a name", t_party_exists:"\"%s\" is already in the directory for this kind",
+    t_party_in_use:"Can't delete \"%s\" — %s receipt(s) still use it. Merge or reassign them first.",
+    t_confirm_delete_party:"Delete \"%s\" from the directory?", t_confirm_merge_party:"Merge \"%s\" into \"%s\"? Every receipt under \"%s\" will switch to \"%s\".",
+    log_party_added:"Added %s \"%s\" to the directory", log_party_added_simple:"Added \"%s\" to the directory", log_party_renamed:"Renamed party \"%s\" to \"%s\" (%s receipt(s) updated)",
+    log_party_merged:"Merged \"%s\" into \"%s\" (%s receipt(s) updated)", log_party_deleted:"Deleted \"%s\" from the directory",
+    party_kind_suppliers_tab:"Suppliers", party_kind_clients_tab:"Clients", party_kind_projects_tab:"Projects",
+    th_party_change_kind:"Change Kind", party_change_kind_placeholder:"— change to —",
+    t_confirm_reclassify_safe:"Change \"%s\" from %s to %s? %s receipt(s) will be reclassified.",
+    t_confirm_reclassify_risky:"Change \"%s\" from %s to %s? This will flip %s receipt(s) from Incoming to Outgoing (or the reverse) — %s total unit(s) that currently add to stock will instead subtract, or the reverse. Current stock levels for every item involved will change. This cannot be automatically undone. Are you sure?",
+    log_party_reclassified:"Reclassified \"%s\" from %s to %s (%s receipt(s), %s unit(s) affected)",
     empty_no_categories:"No categories yet.", empty_no_custom_units:"No custom units added yet.",
     t_prefix_format:"Prefix must be 1-6 letters only", t_category_name_required:"Please enter a category name",
     t_prefix_exists:"Prefix %s is already used", t_prefix_in_use:"Can't delete %s — %s item(s) still use it. Reassign them first.",
@@ -1056,6 +1170,8 @@ var I18N = {
     log_unit_added:"Added unit %s", log_unit_deleted:"Deleted unit %s",
     perm_view_dashboard:"View Dashboard", perm_view_items:"View Items", perm_add_items:"Add Items", perm_edit_items:"Edit Items", perm_delete_items:"Delete Items",
     perm_new_receipt:"Create Receipts", perm_view_receipts:"View Receipts", perm_edit_receipts:"Edit Receipts", perm_verify_receipts:"Verify Receipts", perm_delete_receipts:"Delete Receipts",
+    perm_view_addition_notes:"View Addition Notes (Incoming)", perm_view_receipt_notes:"View Receipt Notes (Outgoing)",
+    nav_addition_notes:"Addition Notes", nav_receipt_notes:"Receipt Notes",
     perm_delete_card_rows:"Delete Item Card Rows",
     btn_mark_out_of_stock:"Mark as Out of Stock", t_already_zero:"This item is already at zero.",
     t_confirm_zero_stock:"Bring %s to zero? Current balance is %s — this will record an adjustment movement for the difference.",
@@ -1128,7 +1244,7 @@ var I18N = {
     empty_no_low:"كل الأصناف عليها رصيد كافٍ",
     th_formno:"رقم الإذن", th_date:"التاريخ", th_type:"النوع", th_party:"الجهة", th_items:"عدد الأصناف", th_total:"الإجمالي", link_open:"فتح", link_delete:"حذف",
     type_in:"وارد", type_out:"منصرف",
-    status_ok:"جيد", status_low:"منخفض", status_out:"نفد",
+    status_ok:"متوفر", status_low:"منخفض", status_out:"نفد",
 
     items_title:"الأصناف", items_subtitle:"كل منتج له كود فريد — الرصيد يُحسب تلقائيًا من الحركات",
     search_items_ph:"بحث بالكود أو الاسم...", cat_filter_all:"كل الفئات",
@@ -1167,7 +1283,7 @@ var I18N = {
     btn_close:"إغلاق", btn_print:"🖨 طباعة",
 
     t_code_name_required:"الكود والاسم مطلوبان",
-    t_code_exists:"هذا الكود مستخدم بالفعل", t_category_required:"يرجى اختيار فئة", opt_select_category:"— اختر فئة —",
+    t_code_exists:"هذا الكود مستخدم بالفعل", t_category_required:"يرجى اختيار فئة", opt_select_category:"— اختر فئة —", opt_select_party:"— اختر —", opt_select_user:"— اختر اسمك —",
     t_code_format:"يجب أن يكون الكود بصيغة ABC-00123 (حروف، شرطة، ثم 5 أرقام)",
     t_bulk_badformat:"، %s بصيغة كود غير صحيحة",
     t_saved:"تم الحفظ",
@@ -1200,6 +1316,7 @@ var I18N = {
     report_tab_inventory:"المخزون", report_tab_projects:"تحليل المشاريع", report_tab_clients:"تحليل العملاء", report_tab_suppliers:"تحليل الموردين", report_tab_returns:"الأصناف المرتجعة",
     th_returned_from:"مرتجع من", card_total_returned_items:"أصناف بها مرتجعات", card_total_returned_qty:"إجمالي الكمية المرتجعة", card_total_returned_value:"إجمالي قيمة المرتجعات",
     th_total_value:"القيمة الإجمالية", card_total_value:"إجمالي قيمة المخزون", card_unknown_cost:"أصناف بدون سعر شراء",
+    btn_export_excel:"تصدير إلى إكسل", t_export_failed:"تعذر تحميل أداة التصدير إلى إكسل — تحقق من اتصالك وحاول مرة أخرى.",
     th_project_site:"المشروع / الموقع", th_receipts_count:"عدد الإذونات", th_items_count:"عدد الأصناف", th_total_qty:"إجمالي الكمية", th_est_cost:"التكلفة التقديرية",
     card_total_projects:"إجمالي المشاريع", card_total_cost:"إجمالي التكلفة التقديرية",
     th_client_name:"العميل", th_total_revenue:"إجمالي الإيراد",
@@ -1221,6 +1338,29 @@ var I18N = {
     ph_new_unit:"مثال: KG", btn_add_unit:"+ إضافة وحدة", th_unit_code:"الوحدة", th_unit_name:"الاسم",
     t_unit_name_required:"يرجى إدخال اسم الوحدة",
     log_category_renamed:"تمت إعادة تسمية الفئة %s: \"%s\" -> \"%s\"", log_unit_renamed:"تمت إعادة تسمية الوحدة %s إلى \"%s\"", log_unit_code_renamed:"تم تغيير رمز الوحدة %s إلى %s",
+    settings_parties_title:"الموردون والعملاء والمشاريع", settings_parties_subtitle:"تُبنى تلقائيًا من إذوناتك. أعد التسمية لتصحيح خطأ إملائي في كل مكان دفعة واحدة، أو ادمج إدخالين هما في الحقيقة نفس الجهة.",
+    ph_new_party_name:"الاسم", btn_add_party:"+ إضافة",
+    party_kind_supplier:"مورد", party_kind_client:"عميل", party_kind_project:"مشروع", party_kind_all:"كل الأنواع",
+    th_party_name:"الاسم", th_party_kind:"النوع", th_party_merge:"دمج في", party_merge_placeholder:"— دمج في —",
+    th_party_used_as:"يُستخدم كـ", party_kind_unused:"لم يُستخدم بعد", party_tagged_not_used:"لم يُستخدم بعد",
+    btn_view_receipts:"عرض الإذونات", party_receipts_subtitle:"كل إذن يظهر فيه هذا الاسم، واردًا كان أو صادرًا.",
+    btn_merge:"دمج", party_merge_title:"دمج تكرار", party_merge_into_label:"احتفظ بهذا بدلاً منه",
+    party_merge_subtitle:"دمج \"%s\" (%s إذن) — سيختفي من القائمة وسينتقل كل إذن له إلى أي اسم تحتفظ به.",
+    party_role_locked_hint:"لديه بالفعل إذونات حقيقية من هذا النوع — لا يمكن إلغاء تحديده", party_role_added:"تم وضع علامة", party_role_removed:"تم إزالة العلامة",
+    log_party_role_toggled:"%s %s كـ %s",
+    party_role_cant_remove:"لدى %s بالفعل إذونات حقيقية كـ %s — لا يمكن إزالة هذا التصنيف، يمكن فقط الإضافة إليه.",
+    party_needs_review:"جديد — اختر نوعه", log_party_synced:"تم العثور على %s اسم جديد في الإذونات وإضافته إلى الدليل",
+    empty_no_parties:"لا توجد إدخالات بعد.",
+    t_party_name_required:"يرجى إدخال اسم", t_party_exists:"\"%s\" موجود بالفعل في الدليل لهذا النوع",
+    t_party_in_use:"تعذر حذف \"%s\" — لا يزال %s إذن يستخدمها. ادمجها أو أعد تصنيفها أولاً.",
+    t_confirm_delete_party:"حذف \"%s\" من الدليل؟", t_confirm_merge_party:"دمج \"%s\" في \"%s\"؟ سينتقل كل إذن تحت \"%s\" إلى \"%s\".",
+    log_party_added:"تمت إضافة %s \"%s\" إلى الدليل", log_party_added_simple:"تمت إضافة \"%s\" إلى الدليل", log_party_renamed:"تمت إعادة تسمية الجهة \"%s\" إلى \"%s\" (تم تحديث %s إذن)",
+    log_party_merged:"تم دمج \"%s\" في \"%s\" (تم تحديث %s إذن)", log_party_deleted:"تم حذف \"%s\" من الدليل",
+    party_kind_suppliers_tab:"الموردون", party_kind_clients_tab:"العملاء", party_kind_projects_tab:"المشاريع",
+    th_party_change_kind:"تغيير النوع", party_change_kind_placeholder:"— تغيير إلى —",
+    t_confirm_reclassify_safe:"تغيير \"%s\" من %s إلى %s؟ سيتم إعادة تصنيف %s إذن.",
+    t_confirm_reclassify_risky:"تغيير \"%s\" من %s إلى %s؟ سيؤدي هذا إلى قلب %s إذن من وارد إلى صادر (أو العكس) — %s وحدة كانت تُضاف حاليًا إلى المخزون ستُطرح بدلاً من ذلك، أو العكس. ستتغير مستويات المخزون الحالية لكل صنف متضمن. لا يمكن التراجع عن هذا تلقائيًا. هل أنت متأكد؟",
+    log_party_reclassified:"تمت إعادة تصنيف \"%s\" من %s إلى %s (%s إذن، %s وحدة متأثرة)",
     empty_no_categories:"لا توجد فئات بعد.", empty_no_custom_units:"لم تتم إضافة وحدات مخصصة بعد.",
     t_prefix_format:"يجب أن تكون البادئة من 1 إلى 6 أحرف فقط", t_category_name_required:"يرجى إدخال اسم الفئة",
     t_prefix_exists:"البادئة %s مستخدمة بالفعل", t_prefix_in_use:"تعذر حذف %s — لا يزال %s صنف يستخدمها. أعد تصنيفها أولاً.",
@@ -1232,6 +1372,8 @@ var I18N = {
     log_unit_added:"تمت إضافة الوحدة %s", log_unit_deleted:"تم حذف الوحدة %s",
     perm_view_dashboard:"عرض لوحة المتابعة", perm_view_items:"عرض الأصناف", perm_add_items:"إضافة أصناف", perm_edit_items:"تعديل أصناف", perm_delete_items:"حذف أصناف",
     perm_new_receipt:"إنشاء إذونات", perm_view_receipts:"عرض الإذونات", perm_edit_receipts:"تعديل الإذونات", perm_verify_receipts:"مطابقة الإذونات", perm_delete_receipts:"حذف الإذونات",
+    perm_view_addition_notes:"عرض إذونات الإضافة (وارد)", perm_view_receipt_notes:"عرض إذونات الاستلام (صادر)",
+    nav_addition_notes:"إذونات الإضافة", nav_receipt_notes:"إذونات الاستلام",
     perm_delete_card_rows:"حذف صفوف بطاقة الصنف",
     btn_mark_out_of_stock:"تحديد كنافذ من المخزون", t_already_zero:"هذا الصنف رصيده صفر بالفعل.",
     t_confirm_zero_stock:"تصفير رصيد %s؟ الرصيد الحالي %s — سيتم تسجيل حركة تسوية بالفرق.",
@@ -1304,7 +1446,7 @@ var I18N = {
     empty_no_low:"Tüm ürünlerin stoku yeterli",
     th_formno:"Fiş No.", th_date:"Tarih", th_type:"Tür", th_party:"Taraf", th_items:"Kalem", th_total:"Toplam", link_open:"Aç", link_delete:"Sil",
     type_in:"Giriş", type_out:"Çıkış",
-    status_ok:"İyi", status_low:"Az", status_out:"Tükendi",
+    status_ok:"Stokta", status_low:"Az", status_out:"Tükendi",
 
     items_title:"Ürünler", items_subtitle:"Her ürünün tek bir kodu vardır — stok, hareketlerden otomatik hesaplanır",
     search_items_ph:"Koda veya isme göre ara...", cat_filter_all:"Tüm kategoriler",
@@ -1343,7 +1485,7 @@ var I18N = {
     btn_close:"Kapat", btn_print:"🖨 Yazdır",
 
     t_code_name_required:"Kod ve isim gereklidir",
-    t_code_exists:"Bu kod zaten kullanılıyor", t_category_required:"Lütfen bir kategori seçin", opt_select_category:"— Bir kategori seçin —",
+    t_code_exists:"Bu kod zaten kullanılıyor", t_category_required:"Lütfen bir kategori seçin", opt_select_category:"— Bir kategori seçin —", opt_select_party:"— Seçin —", opt_select_user:"— Adınızı seçin —",
     t_code_format:"Kod ABC-00123 biçiminde olmalı (harfler, tire, 5 haneli sayı)",
     t_bulk_badformat:", %s geçersiz kod biçiminde",
     t_saved:"Kaydedildi",
@@ -1376,6 +1518,7 @@ var I18N = {
     report_tab_inventory:"Stok", report_tab_projects:"Proje Analizi", report_tab_clients:"Müşteri Analizi", report_tab_suppliers:"Tedarikçi Analizi", report_tab_returns:"İade Edilen Ürünler",
     th_returned_from:"İade Eden", card_total_returned_items:"İadeli ürünler", card_total_returned_qty:"Toplam iade miktarı", card_total_returned_value:"Toplam iade değeri",
     th_total_value:"Toplam Değer", card_total_value:"Toplam stok değeri", card_unknown_cost:"Alış fiyatı olmayan ürünler",
+    btn_export_excel:"Excel'e Aktar", t_export_failed:"Excel'e aktarma aracı yüklenemedi — bağlantınızı kontrol edip tekrar deneyin.",
     th_project_site:"Proje / Saha", th_receipts_count:"Fiş Sayısı", th_items_count:"Ürün Sayısı", th_total_qty:"Toplam Miktar", th_est_cost:"Tahmini Maliyet",
     card_total_projects:"Toplam proje", card_total_cost:"Toplam tahmini maliyet",
     th_client_name:"Müşteri", th_total_revenue:"Toplam Gelir",
@@ -1397,6 +1540,29 @@ var I18N = {
     ph_new_unit:"örn. KG", btn_add_unit:"+ Birim Ekle", th_unit_code:"Birim", th_unit_name:"Ad",
     t_unit_name_required:"Lütfen bir birim adı girin",
     log_category_renamed:"%s kategorisi yeniden adlandırıldı: \"%s\" -> \"%s\"", log_unit_renamed:"%s birimi \"%s\" olarak yeniden adlandırıldı", log_unit_code_renamed:"%s birim kodu %s olarak değiştirildi",
+    settings_parties_title:"Tedarikçiler, Müşteriler ve Projeler", settings_parties_subtitle:"Fişlerinizden otomatik olarak oluşturulur. Bir yazım hatasını her yerde tek seferde düzeltmek için yeniden adlandırın, veya aslında aynı olan iki kaydı birleştirin.",
+    ph_new_party_name:"İsim", btn_add_party:"+ Ekle",
+    party_kind_supplier:"Tedarikçi", party_kind_client:"Müşteri", party_kind_project:"Proje", party_kind_all:"Tüm türler",
+    th_party_name:"İsim", th_party_kind:"Tür", th_party_merge:"Birleştir", party_merge_placeholder:"— birleştirilecek —",
+    th_party_used_as:"Şu Şekilde Kullanılıyor", party_kind_unused:"Henüz kullanılmadı", party_tagged_not_used:"henüz kullanılmadı",
+    btn_view_receipts:"Fişleri Görüntüle", party_receipts_subtitle:"Bu ismin geçtiği her fiş, giriş veya çıkış.",
+    btn_merge:"Birleştir", party_merge_title:"Kopyayı Birleştir", party_merge_into_label:"Bunun yerine bunu tut",
+    party_merge_subtitle:"\"%s\" birleştiriliyor (%s fiş) — listeden kaybolacak ve her fişi tuttuğunuz isme geçecek.",
+    party_role_locked_hint:"Bu türden gerçek fişleri zaten var — işareti kaldırılamaz", party_role_added:"etiketlendi", party_role_removed:"etiket kaldırıldı",
+    log_party_role_toggled:"%s %s: %s",
+    party_role_cant_remove:"%s zaten gerçek %s fişlerine sahip — bu etiket kaldırılamaz, yalnızca eklenebilir.",
+    party_needs_review:"Yeni — rol(ler)ini seçin", log_party_synced:"Fişlerde %s yeni isim bulundu ve dizine eklendi",
+    empty_no_parties:"Henüz kayıt yok.",
+    t_party_name_required:"Lütfen bir isim girin", t_party_exists:"\"%s\" bu tür için dizinde zaten var",
+    t_party_in_use:"\"%s\" silinemiyor — hâlâ %s fiş kullanıyor. Önce birleştirin veya yeniden sınıflandırın.",
+    t_confirm_delete_party:"\"%s\" dizinden silinsin mi?", t_confirm_merge_party:"\"%s\", \"%s\" ile birleştirilsin mi? \"%s\" altındaki her fiş \"%s\" olarak değişecek.",
+    log_party_added:"Dizine %s \"%s\" eklendi", log_party_added_simple:"Dizine \"%s\" eklendi", log_party_renamed:"\"%s\" \"%s\" olarak yeniden adlandırıldı (%s fiş güncellendi)",
+    log_party_merged:"\"%s\", \"%s\" ile birleştirildi (%s fiş güncellendi)", log_party_deleted:"\"%s\" dizinden silindi",
+    party_kind_suppliers_tab:"Tedarikçiler", party_kind_clients_tab:"Müşteriler", party_kind_projects_tab:"Projeler",
+    th_party_change_kind:"Türü Değiştir", party_change_kind_placeholder:"— şuna değiştir —",
+    t_confirm_reclassify_safe:"\"%s\", %s'dan %s'a değiştirilsin mi? %s fiş yeniden sınıflandırılacak.",
+    t_confirm_reclassify_risky:"\"%s\", %s'dan %s'a değiştirilsin mi? Bu, %s fişi Girişten Çıkışa (veya tersine) çevirecek — şu anda stoka eklenen %s birim bunun yerine çıkarılacak, ya da tersi. İlgili her ürünün mevcut stok seviyeleri değişecek. Bu otomatik olarak geri alınamaz. Emin misiniz?",
+    log_party_reclassified:"\"%s\" %s'dan %s'a yeniden sınıflandırıldı (%s fiş, %s birim etkilendi)",
     empty_no_categories:"Henüz kategori yok.", empty_no_custom_units:"Henüz özel birim eklenmedi.",
     t_prefix_format:"Ön ek yalnızca 1-6 harf olmalıdır", t_category_name_required:"Lütfen bir kategori adı girin",
     t_prefix_exists:"%s ön eki zaten kullanılıyor", t_prefix_in_use:"%s silinemiyor — hâlâ %s ürün kullanıyor. Önce onları yeniden sınıflandırın.",
@@ -1408,6 +1574,8 @@ var I18N = {
     log_unit_added:"%s birimi eklendi", log_unit_deleted:"%s birimi silindi",
     perm_view_dashboard:"Paneli Görüntüle", perm_view_items:"Ürünleri Görüntüle", perm_add_items:"Ürün Ekle", perm_edit_items:"Ürün Düzenle", perm_delete_items:"Ürün Sil",
     perm_new_receipt:"Fiş Oluştur", perm_view_receipts:"Fişleri Görüntüle", perm_edit_receipts:"Fişleri Düzenle", perm_verify_receipts:"Fişleri Doğrula", perm_delete_receipts:"Fişleri Sil",
+    perm_view_addition_notes:"Ekleme Fişlerini Görüntüle (Giriş)", perm_view_receipt_notes:"Teslim Fişlerini Görüntüle (Çıkış)",
+    nav_addition_notes:"Ekleme Fişleri", nav_receipt_notes:"Teslim Fişleri",
     perm_delete_card_rows:"Ürün Kartı Satırlarını Sil",
     btn_mark_out_of_stock:"Stokta Yok Olarak İşaretle", t_already_zero:"Bu ürün zaten sıfırda.",
     t_confirm_zero_stock:"%s sıfırlansın mı? Mevcut bakiye %s — farkı için bir düzeltme hareketi kaydedilecek.",
@@ -1537,6 +1705,7 @@ async function saveRecycleBin(){ await storageSet(K_RECYCLE, JSON.stringify(STAT
 async function saveCategoryMap(){ await storageSet(K_CATEGORYMAP, JSON.stringify(STATE.categoryMap), true); }
 async function saveCustomUnits(){ await storageSet(K_CUSTOMUNITS, JSON.stringify(STATE.customUnits), true); }
 async function saveUnits(){ await storageSet(K_UNITS, JSON.stringify(STATE.units), true); }
+async function savePartyDirectory(){ await storageSet(K_PARTYDIR, JSON.stringify(STATE.partyDirectory), true); }
 
 function todayISO(){
   var d = new Date();
@@ -1557,10 +1726,11 @@ async function loadAll(){
     STATE.categoryMap = (SAVED_STATE_OVERRIDE.categoryMap && Object.keys(SAVED_STATE_OVERRIDE.categoryMap).length) ? SAVED_STATE_OVERRIDE.categoryMap : DEFAULT_CATEGORY_MAP;
     STATE.customUnits = SAVED_STATE_OVERRIDE.customUnits || [];
     STATE.units = (SAVED_STATE_OVERRIDE.units && SAVED_STATE_OVERRIDE.units.length) ? SAVED_STATE_OVERRIDE.units : seedUnitsWithLegacyCustom();
+    STATE.partyDirectory = (SAVED_STATE_OVERRIDE.partyDirectory && SAVED_STATE_OVERRIDE.partyDirectory.length) ? SAVED_STATE_OVERRIDE.partyDirectory : buildInitialPartyDirectory();
     STATE.meta = SAVED_STATE_OVERRIDE.meta || { formCounter:5872, categories:[], locked:false };
     if(typeof STATE.meta.locked !== "boolean") STATE.meta.locked = false;
     STATE.tx.forEach(function(tx){ if(tx.verified===undefined) tx.verified = false; });
-    await Promise.all([saveItems(), saveTx(), saveActions(), saveMeta(), saveUsers(), saveActivityLog(), saveRecycleBin(), saveCategoryMap(), saveCustomUnits(), saveUnits()]);
+    await Promise.all([saveItems(), saveTx(), saveActions(), saveMeta(), saveUsers(), saveActivityLog(), saveRecycleBin(), saveCategoryMap(), saveCustomUnits(), saveUnits(), savePartyDirectory()]);
     STATE.loaded = true;
     return;
   }
@@ -1674,6 +1844,11 @@ async function loadAll(){
     var parsedUnits = rawUnits ? JSON.parse(rawUnits) : null;
     STATE.units = (parsedUnits && parsedUnits.length) ? parsedUnits : seedUnitsWithLegacyCustom();
   }catch(e){ STATE.units = seedUnitsWithLegacyCustom(); }
+  var rawPartyDir = await storageGet(K_PARTYDIR, true);
+  try{
+    var parsedPartyDir = rawPartyDir ? JSON.parse(rawPartyDir) : null;
+    STATE.partyDirectory = (parsedPartyDir && parsedPartyDir.length) ? parsedPartyDir : buildInitialPartyDirectory();
+  }catch(e){ STATE.partyDirectory = buildInitialPartyDirectory(); }
   if(typeof STATE.meta.locked !== "boolean") STATE.meta.locked = false;
 
   STATE.loaded = true;
@@ -1692,6 +1867,7 @@ function stockOf(code){
 function statusOf(item){
   var s = stockOf(item.code);
   if(s <= 0) return "out";
+  if(s < 10) return "low";
   return "ok";
 }
 // Sorts codes by letter prefix, then by the NUMERIC value of the digits — not plain text order,
@@ -2001,7 +2177,7 @@ function renderItems(){
   }
   body.innerHTML = list.map(function(i){
     var st = statusOf(i);
-    var stLabel = st==="ok"?t("status_ok"):t("status_out");
+    var stLabel = st==="ok"?t("status_ok"):(st==="low"?t("status_low"):t("status_out"));
     var price = getLatestPurchasePrice(i.code);
     return '<tr>'+
       '<td class="mono">'+esc(i.code)+'</td>'+
@@ -2167,6 +2343,28 @@ function updatePartyOptionsFor(prefix){
   document.getElementById(prefix+"Party").innerHTML = partyOptionsHtml(type);
   updateFieldVisibilityFor(prefix);
 }
+// Fills a party <select> from the directory, keeping whatever it's currently set to (so switching
+// Type/Party context doesn't lose a selection) — and if that value isn't in the directory at all
+// (an older receipt from before this became a managed list), it's kept as its own option so the
+// field still shows the truth rather than silently blanking out real data.
+function populatePartySelect(sel, currentValue, allowedKinds){
+  if(!sel) return;
+  var directory = (STATE.partyDirectory||[]).slice().sort(function(a,b){ return a.name.localeCompare(b.name); });
+  if(allowedKinds){
+    directory = directory.filter(function(p){
+      var kinds = partyKinds(p.name);
+      return allowedKinds.some(function(k){ return kinds[k]; });
+    });
+  }
+  var known = directory.some(function(p){ return p.name===currentValue; });
+  var html = '<option value="">'+t("opt_select_party")+'</option>' +
+    directory.map(function(p){ return '<option value="'+esc(p.name)+'">'+esc(p.name)+'</option>'; }).join("");
+  if(currentValue && !known){
+    html += '<option value="'+esc(currentValue)+'">'+esc(currentValue)+'</option>';
+  }
+  sel.innerHTML = html;
+  sel.value = currentValue || "";
+}
 function updateFieldVisibilityFor(prefix){
   var type = document.getElementById(prefix+"Type").value;
   var party = document.getElementById(prefix+"Party").value;
@@ -2177,16 +2375,16 @@ function updateFieldVisibilityFor(prefix){
   var clientLbl = document.getElementById(prefix+"ClientLbl");
   var clientInput = document.getElementById(prefix+"ClientName");
   var projectInput = document.getElementById(prefix+"ProjectName");
-  if(projectInput) projectInput.placeholder = t("ph_project_hint");
+  populatePartySelect(projectInput, projectInput ? projectInput.value : "", ["project"]);
   if(type === "IN"){
     projectField.style.display = "none";
     clientField.style.display = "";
     if(party === "returned"){
       if(clientLbl) clientLbl.textContent = t("lbl_party_name_client");
-      if(clientInput) clientInput.placeholder = t("ph_company_hint");
+      populatePartySelect(clientInput, clientInput ? clientInput.value : "", ["client","project"]);
     } else {
       if(clientLbl) clientLbl.textContent = t("lbl_supplier_name");
-      if(clientInput) clientInput.placeholder = t("ph_supplier_hint");
+      populatePartySelect(clientInput, clientInput ? clientInput.value : "", ["supplier"]);
     }
   } else if(party === "project"){
     projectField.style.display = "";
@@ -2195,7 +2393,7 @@ function updateFieldVisibilityFor(prefix){
     projectField.style.display = "none";
     clientField.style.display = "";
     if(clientLbl) clientLbl.textContent = t("lbl_party_name_client");
-    if(clientInput) clientInput.placeholder = t("ph_company_hint");
+    populatePartySelect(clientInput, clientInput ? clientInput.value : "", ["client","project"]);
   }
 }
 // Resolves what "type + party sub-choice + the two name boxes" mean, for saving.
@@ -2398,16 +2596,19 @@ document.getElementById("btnSaveTx").addEventListener("click", async function(){
 });
 
 // ---------------- RECEIPTS VIEW (reconciliation against paper copies) ----------------
+var currentReceiptsKind = "addition"; // "addition" = Incoming, "receipt" = Outgoing — matches the
+  // exact title each printed receipt already shows (Addition Note / Receipt Note)
 function renderReceiptsTab(){
   var q = (document.getElementById("receiptsSearch").value||"").trim().toLowerCase();
   var unverifiedOnly = document.getElementById("receiptsUnverifiedOnly").checked;
-  var list = STATE.tx.filter(function(tx){ return !isNaN(parseInt(tx.formNo,10)); });
+  var wantType = (currentReceiptsKind==="addition") ? "IN" : "OUT";
+  var list = STATE.tx.filter(function(tx){ return !isNaN(parseInt(tx.formNo,10)) && tx.type===wantType; });
   if(q) list = list.filter(function(tx){ return String(tx.formNo).toLowerCase().indexOf(q)>=0; });
   if(unverifiedOnly) list = list.filter(function(tx){ return !tx.verified; });
   list.sort(function(a,b){ return parseInt(a.formNo,10) - parseInt(b.formNo,10); });
 
-  var numberedTotal = STATE.tx.filter(function(tx){ return !isNaN(parseInt(tx.formNo,10)); }).length;
-  var verifiedCount = STATE.tx.filter(function(tx){ return tx.verified && !isNaN(parseInt(tx.formNo,10)); }).length;
+  var numberedTotal = STATE.tx.filter(function(tx){ return !isNaN(parseInt(tx.formNo,10)) && tx.type===wantType; }).length;
+  var verifiedCount = STATE.tx.filter(function(tx){ return tx.verified && !isNaN(parseInt(tx.formNo,10)) && tx.type===wantType; }).length;
   document.getElementById("receiptsSummary").textContent = tf("receipts_summary", verifiedCount, numberedTotal);
 
   var container = document.getElementById("receiptsList");
@@ -2461,6 +2662,35 @@ function renderReceiptsTab(){
 }
 document.getElementById("receiptsSearch").addEventListener("input", renderReceiptsTab);
 document.getElementById("receiptsUnverifiedOnly").addEventListener("change", renderReceiptsTab);
+document.querySelectorAll(".receipts-kind-tab").forEach(function(btn){
+  btn.addEventListener("click", function(){
+    var kind = btn.dataset.receiptskind;
+    var allowed = kind==="addition" ? (hasPermission("viewAdditionNotes")||hasPermission("viewReceipts")) : (hasPermission("viewReceiptNotes")||hasPermission("viewReceipts"));
+    if(!allowed) return;
+    currentReceiptsKind = kind;
+    document.querySelectorAll(".receipts-kind-tab").forEach(function(b){ b.classList.toggle("active", b===btn); });
+    renderReceiptsTab();
+  });
+});
+// Shows only the tab(s) this person actually has — if they only have one of the two, the switcher
+// itself disappears and that's simply the whole view, no toggling needed. The old blanket
+// "View Receipts" permission still grants both, so nobody who already had full access loses any
+// of it just because these two finer permissions now exist.
+function applyReceiptsKindPermissions(){
+  var canAddition = hasPermission("viewAdditionNotes") || hasPermission("viewReceipts");
+  var canReceipt = hasPermission("viewReceiptNotes") || hasPermission("viewReceipts");
+  var tabsWrap = document.getElementById("receiptsKindTabs");
+  var additionBtn = document.querySelector('[data-receiptskind="addition"]');
+  var receiptBtn = document.querySelector('[data-receiptskind="receipt"]');
+  additionBtn.style.display = canAddition ? "" : "none";
+  receiptBtn.style.display = canReceipt ? "" : "none";
+  tabsWrap.style.display = (canAddition && canReceipt) ? "" : "none";
+  if(!canAddition && canReceipt) currentReceiptsKind = "receipt";
+  else if(canAddition && !canReceipt) currentReceiptsKind = "addition";
+  document.querySelectorAll(".receipts-kind-tab").forEach(function(b){
+    b.classList.toggle("active", b.dataset.receiptskind===currentReceiptsKind);
+  });
+}
 
 // ---------------- EDIT RECEIPT (edit an existing page's party/date/notes/lines, in place) ----------------
 var editRcLines = [];
@@ -2473,7 +2703,6 @@ function openEditReceiptModal(txId){
   document.getElementById("editRcType").value = tx.type;
   updatePartyOptionsFor("editRc");
   document.getElementById("editRcParty").value = (tx.type === "OUT") ? (tx.partyType || "client") : (tx.inSubType || "normal");
-  updateFieldVisibilityFor("editRc");
   document.getElementById("editRcSupplierRefNo").value = tx.supplierRefNo || "";
   document.getElementById("editRcSupplierInvoiceNo").value = tx.supplierInvoiceNo || "";
   if(tx.type === "OUT" && tx.partyType === "project"){
@@ -2483,6 +2712,7 @@ function openEditReceiptModal(txId){
     document.getElementById("editRcProjectName").value = "";
     document.getElementById("editRcClientName").value = tx.partyName || "";
   }
+  updateFieldVisibilityFor("editRc"); // populates both selects, keeping whichever value was just set above
   document.getElementById("editRcDate").value = tx.date || "";
   document.getElementById("editRcRecipient").value = tx.recipientName || "";
   document.getElementById("editRcNotes").value = tx.notes || "";
@@ -2642,7 +2872,7 @@ document.getElementById("btnBackup").addEventListener("click", function(){
   document.getElementById("itemModalBackdrop").classList.remove("show");
   document.getElementById("receiptOverlay").classList.remove("show");
 
-  var snapshot = { items: STATE.items, transactions: STATE.tx, actions: STATE.actions, users: STATE.users, activityLog: STATE.activityLog, recycleBin: STATE.recycleBin, categoryMap: STATE.categoryMap, customUnits: STATE.customUnits, units: STATE.units, meta: STATE.meta };
+  var snapshot = { items: STATE.items, transactions: STATE.tx, actions: STATE.actions, users: STATE.users, activityLog: STATE.activityLog, recycleBin: STATE.recycleBin, categoryMap: STATE.categoryMap, customUnits: STATE.customUnits, units: STATE.units, partyDirectory: STATE.partyDirectory, meta: STATE.meta };
   var fullHtml = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
   fullHtml = fullHtml.replace(
     "var SAVED_STATE_OVERRIDE = null;",
@@ -2697,7 +2927,8 @@ document.getElementById("loadFileInput").addEventListener("change", function(e){
       STATE.categoryMap = (payload.categoryMap && Object.keys(payload.categoryMap).length) ? payload.categoryMap : STATE.categoryMap;
       STATE.customUnits = Array.isArray(payload.customUnits) ? payload.customUnits : STATE.customUnits;
       STATE.units = (Array.isArray(payload.units) && payload.units.length) ? payload.units : STATE.units;
-      await Promise.all([saveItems(), saveTx(), saveActions(), saveMeta(), saveUsers(), saveActivityLog(), saveRecycleBin(), saveCategoryMap(), saveCustomUnits(), saveUnits()]);
+      STATE.partyDirectory = (Array.isArray(payload.partyDirectory) && payload.partyDirectory.length) ? payload.partyDirectory : STATE.partyDirectory;
+      await Promise.all([saveItems(), saveTx(), saveActions(), saveMeta(), saveUsers(), saveActivityLog(), saveRecycleBin(), saveCategoryMap(), saveCustomUnits(), saveUnits(), savePartyDirectory()]);
       rerenderCurrentView();
       toast(t("t_loaded"));
     }catch(err){
@@ -3020,6 +3251,81 @@ function renderReturnsReport(){
     el.addEventListener("click", function(){ openReturnDetail(groups[el.dataset.detailReturn]); });
   });
 }
+
+// ---------------- EXCEL EXPORT (each report, exactly as currently shown/filtered) ----------------
+var XLSX_LOADED = false;
+async function ensureXLSXLoaded(){
+  if(XLSX_LOADED || typeof XLSX !== "undefined"){ XLSX_LOADED = true; return true; }
+  try{
+    await loadScript("https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js");
+    XLSX_LOADED = true;
+    return true;
+  }catch(e){
+    console.error("Failed to load the Excel export library:", e);
+    return false;
+  }
+}
+function downloadAOAAsExcel(aoa, sheetName, filename){
+  var ws = XLSX.utils.aoa_to_sheet(aoa);
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, sheetName.slice(0,31)); // Excel's own 31-char sheet-name limit
+  XLSX.writeFile(wb, filename);
+}
+document.getElementById("btnExportInventory").addEventListener("click", async function(){
+  var btn = this; btn.disabled = true;
+  if(!(await ensureXLSXLoaded())){ toast(t("t_export_failed")); btn.disabled = false; return; }
+  var q = (document.getElementById("invReportSearch").value||"").trim().toLowerCase();
+  var rows = STATE.items.map(function(i){
+    var stock = stockOf(i.code);
+    var price = getLatestPurchasePrice(i.code);
+    var value = (price!=null) ? stock*price : null;
+    return { item:i, stock:stock, price:price, value:value };
+  }).filter(function(r){ return !q || r.item.code.toLowerCase().indexOf(q)>=0 || r.item.name.toLowerCase().indexOf(q)>=0; });
+  rows.sort(function(a,b){ return compareCodes(a.item.code, b.item.code); });
+  var aoa = [[t("th_code"), t("th_name"), t("th_category"), t("th_unit"), t("th_stock"), t("th_cost"), t("th_total_value")]];
+  rows.forEach(function(r){ aoa.push([r.item.code, r.item.name, r.item.category, r.item.unit, r.stock, r.price!=null?r.price:"", r.value!=null?Math.round(r.value*100)/100:""]); });
+  downloadAOAAsExcel(aoa, t("report_tab_inventory"), "Inventory_"+todayISO()+".xlsx");
+  btn.disabled = false;
+});
+document.getElementById("btnExportProjects").addEventListener("click", async function(){
+  var btn = this; btn.disabled = true;
+  if(!(await ensureXLSXLoaded())){ toast(t("t_export_failed")); btn.disabled = false; return; }
+  var groups = groupOutMovements("project");
+  var names = Object.keys(groups).sort(function(a,b){ return groups[b].totalValue - groups[a].totalValue; });
+  var aoa = [[t("th_project_site"), t("th_receipts_count"), t("th_items_count"), t("th_total_qty"), t("th_est_cost")]];
+  names.forEach(function(n){
+    var g = groups[n];
+    aoa.push([n, Object.keys(g.txIds).length, Object.keys(g.itemTotals).length, g.totalQty, Math.round(g.totalValue*100)/100]);
+  });
+  downloadAOAAsExcel(aoa, t("report_tab_projects"), "Project_Analysis_"+todayISO()+".xlsx");
+  btn.disabled = false;
+});
+document.getElementById("btnExportSuppliers").addEventListener("click", async function(){
+  var btn = this; btn.disabled = true;
+  if(!(await ensureXLSXLoaded())){ toast(t("t_export_failed")); btn.disabled = false; return; }
+  var groups = groupTradingPartners();
+  var names = Object.keys(groups).sort(function(a,b){ return (groups[b].inValue+groups[b].outValue) - (groups[a].inValue+groups[a].outValue); });
+  var aoa = [[t("th_supplier_name"), t("th_receipts_count"), t("th_items_count"), t("th_received_qty"), t("th_total_purchases"), t("th_sold_qty"), t("th_total_revenue")]];
+  names.forEach(function(n){
+    var g = groups[n];
+    aoa.push([n, Object.keys(g.txIds).length, Object.keys(g.itemTotals).length, g.inQty||0, Math.round(g.inValue*100)/100, g.outQty||0, Math.round(g.outValue*100)/100]);
+  });
+  downloadAOAAsExcel(aoa, t("report_tab_suppliers"), "Supplier_Analysis_"+todayISO()+".xlsx");
+  btn.disabled = false;
+});
+document.getElementById("btnExportReturns").addEventListener("click", async function(){
+  var btn = this; btn.disabled = true;
+  if(!(await ensureXLSXLoaded())){ toast(t("t_export_failed")); btn.disabled = false; return; }
+  var groups = groupReturns();
+  var codes = Object.keys(groups).sort(function(a,b){ return compareCodes(a,b); });
+  var aoa = [[t("th_code"), t("th_name"), t("th_receipts_count"), t("th_total_qty"), t("th_total_value")]];
+  codes.forEach(function(c){
+    var g = groups[c];
+    aoa.push([c, g.name, Object.keys(g.txIds).length, g.qty+" "+g.unit, Math.round(g.value*100)/100]);
+  });
+  downloadAOAAsExcel(aoa, t("report_tab_returns"), "Returns_"+todayISO()+".xlsx");
+  btn.disabled = false;
+});
 function openReturnDetail(g){
   var rows = g.receiptRows.slice().sort(function(a,b){ return (a.date<b.date?-1:a.date>b.date?1:0); }).map(function(r){
     return '<tr><td class="mono num">'+esc(r.formNo)+'</td><td class="num">'+esc(r.date)+'</td><td class="desc">'+esc(r.from)+'</td>'+
@@ -3670,6 +3976,8 @@ var PERMISSIONS = [
   { key:"deleteItems", label:"perm_delete_items" },
   { key:"newReceipt", label:"perm_new_receipt" },
   { key:"viewReceipts", label:"perm_view_receipts" },
+  { key:"viewAdditionNotes", label:"perm_view_addition_notes" },
+  { key:"viewReceiptNotes", label:"perm_view_receipt_notes" },
   { key:"editReceipts", label:"perm_edit_receipts" },
   { key:"verifyReceipts", label:"perm_verify_receipts" },
   { key:"deleteReceipts", label:"perm_delete_receipts" },
@@ -3708,10 +4016,16 @@ function applyPermissionUI(){
   var firstVisible = null;
   document.querySelectorAll("#navButtons button[data-view]").forEach(function(btn){
     var permKey = navMap[btn.dataset.view];
-    var visible = !STATE.meta.locked || hasPermission(permKey);
+    // Receipts is visible with the old blanket permission OR either of the two finer ones, so
+    // nobody who already had access loses it, while a person given only one of the two new
+    // permissions can still reach the tab (just scoped to their one kind once they're inside).
+    var visible = btn.dataset.view==="receipts"
+      ? (!STATE.meta.locked || hasPermission("viewReceipts") || hasPermission("viewAdditionNotes") || hasPermission("viewReceiptNotes"))
+      : (!STATE.meta.locked || hasPermission(permKey));
     btn.style.display = visible ? "" : "none";
     if(visible && !firstVisible) firstVisible = btn.dataset.view;
   });
+  applyReceiptsKindPermissions();
   var activeBtn = document.querySelector("#navButtons button.active");
   if(activeBtn && activeBtn.style.display === "none" && firstVisible){
     showView(firstVisible);
@@ -3738,8 +4052,13 @@ function checkLockGate(){
 }
 function populateSigninUserList(){
   var sel = document.getElementById("signinUser");
-  sel.innerHTML = STATE.users.map(function(u){ return '<option value="'+esc(u.id)+'">'+esc(u.name)+'</option>'; }).join("");
+  sel.innerHTML = '<option value="" selected>'+t("opt_select_user")+'</option>' +
+    STATE.users.map(function(u){ return '<option value="'+esc(u.id)+'">'+esc(u.name)+'</option>'; }).join("");
+  document.getElementById("signinPin").value = "";
 }
+document.getElementById("signinUser").addEventListener("change", function(){
+  if(this.value) document.getElementById("signinPin").focus();
+});
 function attemptSignIn(){
   var uid = document.getElementById("signinUser").value;
   var pin = document.getElementById("signinPin").value.trim();
@@ -3828,6 +4147,16 @@ function _renderUsersTabImpl(){
 document.getElementById("activityUserFilter").addEventListener("change", renderUsersTab);
 
 // ---------------- CONTROL PANEL (self-service categories & units — no code change needed) ----------------
+var currentSettingsTab = "categories";
+document.querySelectorAll(".settings-tab").forEach(function(btn){
+  btn.addEventListener("click", function(){
+    currentSettingsTab = btn.dataset.settingstab;
+    document.querySelectorAll(".settings-tab").forEach(function(b){ b.classList.toggle("active", b===btn); });
+    document.getElementById("settingsCategories").style.display = (currentSettingsTab==="categories") ? "" : "none";
+    document.getElementById("settingsUnits").style.display = (currentSettingsTab==="units") ? "" : "none";
+    document.getElementById("settingsParties").style.display = (currentSettingsTab==="parties") ? "" : "none";
+  });
+});
 function renderControlPanel(){
   try{ _renderControlPanelImpl(); }
   catch(e){
@@ -3841,8 +4170,151 @@ function itemCountForPrefix(prefix){
 function itemCountForUnit(unit){
   return STATE.items.filter(function(i){ return i.unit===unit; }).length;
 }
+function partyUseCount(name){
+  return STATE.tx.filter(function(tx){ return tx.partyName===name; }).length;
+}
+// A human-readable breakdown like "8 Supplier, 3 Client" — since one real company can legitimately
+// show up in more than one role over time, this is informational only, never a fixed property.
+function partyKindBreakdown(name){
+  var counts = { supplier:0, client:0, project:0 };
+  STATE.tx.forEach(function(tx){ if(tx.partyName===name) counts[classifyPartyKind(tx)]++; });
+  return ["supplier","client","project"].filter(function(k){ return counts[k]>0; })
+    .map(function(k){ return counts[k]+" "+t("party_kind_"+k); }).join(", ") || t("party_kind_unused");
+}
+// True if this party has any real receipt of this kind — a fact from history, not a manual tag,
+// so it's shown locked/checked in the Control Panel rather than something you can untick.
+function partyKindDerived(name, kind){
+  return STATE.tx.some(function(tx){ return tx.partyName===name && classifyPartyKind(tx)===kind; });
+}
+// Which kinds a party can be picked as in New/Edit Receipt: real history plus whatever's been
+// manually tagged — so a freshly-added, not-yet-used party is still selectable right away.
+function partyKinds(name){
+  var entry = (STATE.partyDirectory||[]).find(function(p){ return p.name===name; });
+  var kinds = {};
+  STATE.tx.forEach(function(tx){ if(tx.partyName===name) kinds[classifyPartyKind(tx)] = true; });
+  if(entry && entry.roles) entry.roles.forEach(function(r){ kinds[r] = true; });
+  return kinds;
+}
+async function togglePartyRole(id, role, isChecked, isDerived){
+  if(!requirePermission("manageSettings")){ renderControlPanel(); return; }
+  var entry = (STATE.partyDirectory||[]).find(function(p){ return p.id===id; });
+  if(!entry) return;
+  if(isDerived && !isChecked){
+    // Real receipts already exist for this kind — unticking is purely cosmetic and would just
+    // reappear on the next refresh, so it's better to say so plainly than to silently snap back.
+    toast(tf("party_role_cant_remove", entry.name, t("party_kind_"+role)));
+    renderControlPanel();
+    return;
+  }
+  entry.roles = entry.roles || [];
+  if(isChecked && entry.roles.indexOf(role)<0) entry.roles.push(role);
+  if(!isChecked) entry.roles = entry.roles.filter(function(r){ return r!==role; });
+  entry.needsReview = false; // the first conscious choice on this entry counts as having reviewed it
+  logActivity("party_role_toggle", tf("log_party_role_toggled", entry.name, isChecked ? t("party_role_added") : t("party_role_removed"), t("party_kind_"+role)));
+  renderControlPanel();
+  savePartyDirectory().catch(function(e){ console.error("Background save failed:", e); });
+}
+// Every receipt (incoming or outgoing) that names this party — the answer to "where did we
+// send/receive items from this company", without needing to dig through History or Receipts.
+function openPartyReceiptsModal(name){
+  document.getElementById("partyReceiptsModalTitle").textContent = name;
+  var rows = STATE.tx.filter(function(tx){ return tx.partyName===name; })
+    .slice().sort(function(a,b){ return (a.date<b.date?1:a.date>b.date?-1:0); });
+  var body = document.getElementById("partyReceiptsBody");
+  if(rows.length===0){
+    body.innerHTML = '<tr><td colspan="5"><div class="empty">'+t("empty_no_tx")+'</div></td></tr>';
+  } else {
+    body.innerHTML = rows.map(function(tx){
+      var kind = classifyPartyKind(tx);
+      return '<tr>'+
+        '<td class="mono">'+esc(tx.formNo)+'</td>'+
+        '<td>'+esc(tx.date||"")+'</td>'+
+        '<td>'+t("party_kind_"+kind)+'</td>'+
+        '<td>'+tx.lines.length+'</td>'+
+        '<td><a class="link" data-openpartyrc="'+esc(tx.id)+'">'+t("link_open")+'</a></td>'+
+        '</tr>';
+    }).join("");
+    body.querySelectorAll("[data-openpartyrc]").forEach(function(el){
+      el.addEventListener("click", function(){ openReceipt(el.dataset.openpartyrc); });
+    });
+  }
+  document.getElementById("partyReceiptsModalBackdrop").classList.add("show");
+}
+document.getElementById("partyReceiptsCloseBtn").addEventListener("click", function(){
+  document.getElementById("partyReceiptsModalBackdrop").classList.remove("show");
+});
+var partyMergeFromId = null;
+function openPartyMergeModal(id){
+  var entry = (STATE.partyDirectory||[]).find(function(p){ return p.id===id; });
+  if(!entry) return;
+  partyMergeFromId = id;
+  var count = partyUseCount(entry.name);
+  document.getElementById("partyMergeSubtitle").textContent = tf("party_merge_subtitle", entry.name, count);
+  var others = (STATE.partyDirectory||[]).filter(function(p){ return p.id!==id; }).sort(function(a,b){ return a.name.localeCompare(b.name); });
+  var sel = document.getElementById("partyMergeIntoSelect");
+  sel.innerHTML = others.map(function(p){ return '<option value="'+esc(p.id)+'">'+esc(p.name)+'</option>'; }).join("");
+  document.getElementById("partyMergeModalBackdrop").classList.add("show");
+}
+document.getElementById("partyMergeCancelBtn").addEventListener("click", function(){
+  document.getElementById("partyMergeModalBackdrop").classList.remove("show");
+});
+// Folds one directory entry into another — every receipt under the old name switches to the kept
+// name, regardless of what kind each individual receipt is (a company can be both a supplier and
+// a client at different times), then the now-redundant entry is removed. This only ever touches
+// the name text, never a receipt's own type or classification, so it can never affect stock math.
+document.getElementById("partyMergeConfirmBtn").addEventListener("click", async function(){
+  if(!requirePermission("manageSettings")) return;
+  var from = (STATE.partyDirectory||[]).find(function(p){ return p.id===partyMergeFromId; });
+  var intoId = document.getElementById("partyMergeIntoSelect").value;
+  var into = (STATE.partyDirectory||[]).find(function(p){ return p.id===intoId; });
+  if(!from || !into) return;
+  var changed = renamePartyEverywhere(from.name, into.name);
+  STATE.partyDirectory = STATE.partyDirectory.filter(function(p){ return p.id!==from.id; });
+  logActivity("party_merge", tf("log_party_merged", from.name, into.name, changed));
+  document.getElementById("partyMergeModalBackdrop").classList.remove("show");
+  renderControlPanel();
+  toast(t("t_saved"));
+  var jobs = [savePartyDirectory()];
+  if(changed>0) jobs.push(saveTx(), saveActions());
+  Promise.all(jobs).catch(function(e){ console.error("Background save failed:", e); });
+});
+// Makes sure every real party name in the receipts actually has a directory entry — catches
+// anything that existed before this directory did, or slipped in some other way. Anything newly
+// added here starts fully blank (needsReview flag), so it's never silently pre-checked from
+// history — the person reviews and assigns it themselves, on purpose, the first time they touch it.
+// These two strings are internal fallback labels for historical entries with no real party
+// recorded — never real companies, so they're kept out of the directory (and cleaned up if an
+// earlier sync ever let them in).
+var PARTY_NAME_PLACEHOLDERS = [
+  "Opening balance (pre-ledger, no receipt number)",
+  "Not recorded in the original ledger"
+];
+function syncMissingParties(){
+  var removedPlaceholders = 0;
+  var before = (STATE.partyDirectory||[]).length;
+  STATE.partyDirectory = (STATE.partyDirectory||[]).filter(function(p){ return PARTY_NAME_PLACEHOLDERS.indexOf(p.name)<0; });
+  removedPlaceholders = before - STATE.partyDirectory.length;
+
+  var known = {};
+  STATE.partyDirectory.forEach(function(p){ known[p.name] = true; });
+  var added = 0;
+  STATE.tx.forEach(function(tx){
+    var name = (tx.partyName||"").trim();
+    if(!name || known[name] || PARTY_NAME_PLACEHOLDERS.indexOf(name)>=0) return;
+    known[name] = true;
+    STATE.partyDirectory.push({ id:"PD-"+Date.now()+"-"+added, name:name, roles:[], needsReview:true });
+    added++;
+  });
+  if(added>0 || removedPlaceholders>0){
+    if(added>0) logActivity("party_sync", tf("log_party_synced", added));
+    savePartyDirectory().catch(function(e){ console.error("Background save failed:", e); });
+  }
+  return added;
+}
 function _renderControlPanelImpl(){
   var canManage = hasPermission("manageSettings");
+  STATE.partyDirectory = STATE.partyDirectory || [];
+  syncMissingParties();
   var catBody = document.getElementById("categoryMapBody");
   var prefixes = Object.keys(STATE.categoryMap||{}).sort();
   if(prefixes.length===0){
@@ -3908,6 +4380,58 @@ function _renderControlPanelImpl(){
   document.getElementById("btnAddCategory").style.display = canManage ? "" : "none";
   document.getElementById("newUnitCode").disabled = !canManage;
   document.getElementById("btnAddUnit").style.display = canManage ? "" : "none";
+
+  var partyBody = document.getElementById("partyDirectoryBody");
+  var directory = (STATE.partyDirectory||[]).slice().sort(function(a,b){ return a.name.localeCompare(b.name); });
+  var KIND_ORDER = ["supplier","client","project"];
+  if(directory.length===0){
+    partyBody.innerHTML = '<tr><td colspan="3"><div class="empty">'+t("empty_no_parties")+'</div></td></tr>';
+  } else {
+    partyBody.innerHTML = directory.map(function(p){
+      var nameCell = canManage
+        ? '<input type="text" class="ic-cell cp-partyname" data-id="'+esc(p.id)+'" value="'+esc(p.name)+'">'
+        : esc(p.name);
+      var needsReview = !!p.needsReview;
+      var usedAsCell = (needsReview ? '<span style="color:var(--copper); font-size:11px; font-weight:600; margin-inline-end:8px;">'+t("party_needs_review")+'</span>' : '') +
+        KIND_ORDER.map(function(k){
+        var derived = !needsReview && partyKindDerived(p.name, k);
+        var tagged = (p.roles||[]).indexOf(k) >= 0;
+        var checked = !needsReview && (derived || tagged);
+        var hintAttr = derived ? ' title="'+t("party_role_locked_hint")+'"' : '';
+        return '<label style="display:inline-flex; align-items:center; gap:3px; margin-inline-end:10px; font-weight:400; white-space:nowrap;">'+
+          '<input type="checkbox" class="cp-partyrole" data-id="'+esc(p.id)+'" data-role="'+k+'" data-derived="'+(derived?"1":"0")+'" '+(checked?'checked':'')+(canManage?hintAttr:' disabled')+'> '+t("party_kind_"+k)+
+          '</label>';
+      }).join("");
+      return '<tr>'+
+        '<td>'+nameCell+'</td>'+
+        '<td>'+usedAsCell+'</td>'+
+        '<td style="white-space:nowrap;">'+
+          '<button class="icon-btn" data-viewreceipts="'+esc(p.name)+'" title="'+t("btn_view_receipts")+'">🧾</button> '+
+          (canManage ? '<button class="icon-btn" data-mergeparty="'+esc(p.id)+'" title="'+t("btn_merge")+'">🔗</button> ' : '')+
+          (canManage ? '<button class="icon-btn" data-delparty="'+esc(p.id)+'" title="'+t("btn_delete_row")+'">🗑</button>' : '')+
+        '</td>'+
+        '</tr>';
+    }).join("");
+    if(canManage){
+      partyBody.querySelectorAll(".cp-partyname").forEach(function(inp){
+        inp.addEventListener("change", function(){ renameParty(inp.dataset.id, inp.value); });
+      });
+      partyBody.querySelectorAll(".cp-partyrole:not(:disabled)").forEach(function(cb){
+        cb.addEventListener("change", function(){ togglePartyRole(cb.dataset.id, cb.dataset.role, cb.checked, cb.dataset.derived==="1"); });
+      });
+      partyBody.querySelectorAll("[data-mergeparty]").forEach(function(el){
+        el.addEventListener("click", function(){ openPartyMergeModal(el.dataset.mergeparty); });
+      });
+      partyBody.querySelectorAll("[data-delparty]").forEach(function(el){
+        el.addEventListener("click", function(){ deleteParty(el.dataset.delparty); });
+      });
+    }
+    partyBody.querySelectorAll("[data-viewreceipts]").forEach(function(el){
+      el.addEventListener("click", function(){ openPartyReceiptsModal(el.dataset.viewreceipts); });
+    });
+  }
+  document.getElementById("newPartyName").disabled = !canManage;
+  document.getElementById("btnAddParty").style.display = canManage ? "" : "none";
 }
 document.getElementById("btnAddCategory").addEventListener("click", async function(){
   if(!requirePermission("manageSettings")) return;
@@ -4010,6 +4534,81 @@ async function deleteCustomUnit(code){
   renderControlPanel();
   toast(t("t_deleted"));
   saveUnits().catch(function(e){ console.error("Background save failed:", e); });
+}
+
+// Bulk find-and-replace of a party name across every receipt (and its Notes, which mirror the
+// party name) — the shared engine behind both renaming a directory entry and merging two together.
+// Renames by NAME ALONE, across every kind of receipt at once — merging never touches a receipt's
+// own type or classification, only the text of who it's with, so it's always safe for stock math.
+function renamePartyEverywhere(oldName, newName){
+  var count = 0;
+  STATE.tx.forEach(function(tx){
+    if(tx.partyName===oldName){
+      tx.partyName = newName;
+      tx.lines.forEach(function(l){ if(l.note===oldName) l.note = newName; });
+      count++;
+    }
+  });
+  STATE.actions.forEach(function(a){
+    if(a.partyName===oldName){
+      a.partyName = newName;
+      a.lines.forEach(function(l){ if(l.note===oldName) l.note = newName; });
+    }
+  });
+  return count;
+}
+document.getElementById("btnAddParty").addEventListener("click", async function(){
+  if(!requirePermission("manageSettings")) return;
+  var name = document.getElementById("newPartyName").value.trim();
+  if(!name){ toast(t("t_party_name_required")); return; }
+  if((STATE.partyDirectory||[]).some(function(p){ return p.name===name; })){ toast(tf("t_party_exists", name)); return; }
+  var roles = [];
+  if(document.getElementById("newPartyRoleSupplier").checked) roles.push("supplier");
+  if(document.getElementById("newPartyRoleClient").checked) roles.push("client");
+  if(document.getElementById("newPartyRoleProject").checked) roles.push("project");
+  STATE.partyDirectory = STATE.partyDirectory || [];
+  STATE.partyDirectory.push({ id:"PD-"+Date.now(), name:name, roles:roles });
+  document.getElementById("newPartyName").value = "";
+  document.getElementById("newPartyRoleSupplier").checked = false;
+  document.getElementById("newPartyRoleClient").checked = false;
+  document.getElementById("newPartyRoleProject").checked = false;
+  logActivity("party_add", tf("log_party_added_simple", name));
+  renderControlPanel();
+  toast(t("t_saved"));
+  savePartyDirectory().catch(function(e){ console.error("Background save failed:", e); });
+});
+async function renameParty(id, newNameRaw){
+  if(!requirePermission("manageSettings")){ renderControlPanel(); return; }
+  var entry = (STATE.partyDirectory||[]).find(function(p){ return p.id===id; });
+  if(!entry) return;
+  var newName = newNameRaw.trim();
+  var oldName = entry.name;
+  if(!newName){ toast(t("t_party_name_required")); renderControlPanel(); return; }
+  if(newName === oldName) return;
+  if((STATE.partyDirectory||[]).some(function(p){ return p.id!==id && p.name===newName; })){
+    toast(tf("t_party_exists", newName)); renderControlPanel(); return;
+  }
+  entry.name = newName;
+  var changed = renamePartyEverywhere(oldName, newName);
+  logActivity("party_rename", tf("log_party_renamed", oldName, newName, changed));
+  renderControlPanel();
+  toast(t("t_saved"));
+  var jobs = [savePartyDirectory()];
+  if(changed>0) jobs.push(saveTx(), saveActions());
+  Promise.all(jobs).catch(function(e){ console.error("Background save failed:", e); });
+}
+async function deleteParty(id){
+  if(!requirePermission("manageSettings")) return;
+  var entry = (STATE.partyDirectory||[]).find(function(p){ return p.id===id; });
+  if(!entry) return;
+  var count = partyUseCount(entry.name);
+  if(count > 0){ toast(tf("t_party_in_use", entry.name, count)); return; }
+  if(!confirm(tf("t_confirm_delete_party", entry.name))) return;
+  STATE.partyDirectory = STATE.partyDirectory.filter(function(p){ return p.id!==id; });
+  logActivity("party_delete", tf("log_party_deleted", entry.name));
+  renderControlPanel();
+  toast(t("t_deleted"));
+  savePartyDirectory().catch(function(e){ console.error("Background save failed:", e); });
 }
 
 document.getElementById("btnToggleLock").addEventListener("click", async function(){
