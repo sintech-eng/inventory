@@ -267,7 +267,7 @@
       <div data-i18n="sidebar_note">Everyone who opens this link shares this data.<br>Sintech For Engineering Supplies &amp; Trade</div>
       <button class="btn ghost sm" id="btnLoadFile" style="margin-top:10px; width:100%; color:#fff; border-color:rgba(255,255,255,.3);" data-i18n="btn_load">📂 Load data file</button>
       <input type="file" id="loadFileInput" accept=".html,.json" style="display:none;">
-      <div style="margin-top:10px; font-size:10px; color:rgba(255,255,255,.45); text-align:center;">Build 2026-09-14 22:34 UTC</div>
+      <div style="margin-top:10px; font-size:10px; color:rgba(255,255,255,.45); text-align:center;">Build 2026-09-15 07:26 UTC</div>
     </div>
   </div>
 
@@ -902,7 +902,11 @@ var I18N = {
     itemcard_missing_no:"— missing —", line_edit_title:"Set Receipt Info", ph_line_formno:"e.g. 5872", lbl_line_price:"Unit Price (optional)",
     itemcard_edit_hint:"Click any Date, Receipt No., or Price cell below to edit it directly — like a spreadsheet. Changing a receipt number moves that item onto that page.",
     log_line_receipt_set:"Item %s set to receipt no. %s",
-    th_card_no:"No.", th_card_date:"Date", th_card_receipt:"Receipt No.", th_card_price:"Purchase Price",
+    log_line_receipt_cleared:"Item %s's receipt number was cleared", log_line_qty_set:"Item %s quantity corrected to %s", log_line_note_set:"Item %s's note was edited",
+    th_card_no:"No.", th_card_date:"Date", th_card_receipt:"Receipt No.", th_card_price:"Purchase Price", th_card_type:"Type",
+    class_received:"Received", class_returned:"Returned", class_internal:"Internal Use", class_sold:"Sold",
+    t_reclassified_split:"Reclassified — split onto its own page since it shared a receipt with other items",
+    log_line_type_set:"Item %s reclassified as %s",
     th_card_in_return:"Returned", th_card_in_normal:"Received", th_card_out_internal:"Internal Use", th_card_out_external:"Sold",
     th_card_balance:"Balance", th_card_notes:"Notes", card_in_group:"IN", card_out_group:"OUT",
     card_current_balance:"Current balance",
@@ -1043,7 +1047,11 @@ var I18N = {
     itemcard_missing_no:"— غير مسجل —", line_edit_title:"تحديد بيانات الإذن", ph_line_formno:"مثال: 5872", lbl_line_price:"سعر الوحدة (اختياري)",
     itemcard_edit_hint:"اضغط على أي خلية تاريخ أو رقم إذن أو سعر أدناه لتعديلها مباشرة — مثل جدول إكسل. تغيير رقم الإذن ينقل هذا الصنف إلى تلك الصفحة.",
     log_line_receipt_set:"تم ضبط الصنف %s على رقم الإذن %s",
-    th_card_no:"م", th_card_date:"التاريخ", th_card_receipt:"رقم المستند", th_card_price:"سعر الشراء",
+    log_line_receipt_cleared:"تم مسح رقم الإذن الخاص بالصنف %s", log_line_qty_set:"تم تصحيح كمية الصنف %s إلى %s", log_line_note_set:"تم تعديل ملاحظة الصنف %s",
+    th_card_no:"م", th_card_date:"التاريخ", th_card_receipt:"رقم المستند", th_card_price:"سعر الشراء", th_card_type:"النوع",
+    class_received:"وارد", class_returned:"مرتد", class_internal:"استخدام داخلي", class_sold:"مباع",
+    t_reclassified_split:"تم إعادة التصنيف — تم فصله في صفحة خاصة به لأنه كان مشتركًا في إذن مع أصناف أخرى",
+    log_line_type_set:"تم إعادة تصنيف الصنف %s إلى %s",
     th_card_in_return:"مرتد", th_card_in_normal:"وارد", th_card_out_internal:"استخدام داخلي", th_card_out_external:"مبيع",
     th_card_balance:"الرصيد", th_card_notes:"البيان", card_in_group:"الوارد", card_out_group:"الصادر",
     card_current_balance:"الرصيد الحالي",
@@ -1184,7 +1192,11 @@ var I18N = {
     itemcard_missing_no:"— eksik —", line_edit_title:"Fiş Bilgisini Ayarla", ph_line_formno:"örn. 5872", lbl_line_price:"Birim Fiyat (isteğe bağlı)",
     itemcard_edit_hint:"Aşağıdaki herhangi bir Tarih, Fiş No. veya Fiyat hücresine tıklayarak doğrudan düzenleyin — tıpkı bir e-tablo gibi. Fiş numarasını değiştirmek o ürünü o sayfaya taşır.",
     log_line_receipt_set:"%s ürünü %s fiş numarasına ayarlandı",
-    th_card_no:"No.", th_card_date:"Tarih", th_card_receipt:"Fiş No.", th_card_price:"Alış Fiyatı",
+    log_line_receipt_cleared:"%s ürününün fiş numarası temizlendi", log_line_qty_set:"%s ürününün miktarı %s olarak düzeltildi", log_line_note_set:"%s ürününün notu düzenlendi",
+    th_card_no:"No.", th_card_date:"Tarih", th_card_receipt:"Fiş No.", th_card_price:"Alış Fiyatı", th_card_type:"Tür",
+    class_received:"Alındı", class_returned:"İade Edildi", class_internal:"İç Kullanım", class_sold:"Satıldı",
+    t_reclassified_split:"Yeniden sınıflandırıldı — başka ürünlerle aynı fişi paylaştığı için kendi sayfasına ayrıldı",
+    log_line_type_set:"%s ürünü %s olarak yeniden sınıflandırıldı",
     th_card_in_return:"İade", th_card_in_normal:"Giriş", th_card_out_internal:"İç Kullanım", th_card_out_external:"Satış",
     th_card_balance:"Bakiye", th_card_notes:"Notlar", card_in_group:"GİRİŞ", card_out_group:"ÇIKIŞ",
     card_current_balance:"Güncel bakiye",
@@ -1757,11 +1769,11 @@ document.getElementById("itemDeleteBtn").addEventListener("click", async functio
   if(!confirm(t("t_confirm_delete_item"))) return;
   var deletedCode = origCode;
   STATE.items = STATE.items.filter(function(i){ return i.code!==origCode; });
-  await saveItems();
   logActivity("item_delete", tf("log_item_deleted", deletedCode));
   document.getElementById("itemModalBackdrop").classList.remove("show");
   renderItems();
   toast(t("t_item_deleted"));
+  saveItems().catch(function(e){ console.error("Background save failed:", e); });
 });
 
 document.getElementById("itemSaveBtn").addEventListener("click", async function(){
@@ -1790,10 +1802,10 @@ document.getElementById("itemSaveBtn").addEventListener("click", async function(
     STATE.items.push({ code:code, name:name, category:category, unit:unit, cost:cost });
     logActivity("item_add", tf("log_item_added", code));
   }
-  await saveItems();
   document.getElementById("itemModalBackdrop").classList.remove("show");
   renderItems();
   toast(t("t_saved"));
+  saveItems().catch(function(e){ console.error("Background save failed:", e); });
 });
 
 // ---------------- NEW TRANSACTION VIEW ----------------
@@ -2112,10 +2124,10 @@ function renderReceiptsTab(){
       if(!tx) return;
       tx.verified = !tx.verified;
       tx.verifiedAt = tx.verified ? Date.now() : null;
-      await saveTx();
       logActivity("verify_toggle", tf(tx.verified ? "log_receipt_verified" : "log_receipt_unverified", tx.formNo));
       renderReceiptsTab();
       toast(tx.verified ? t("t_marked_verified") : t("t_unmarked_verified"));
+      saveTx().catch(function(e){ console.error("Background save failed:", e); });
     });
   });
 }
@@ -2280,11 +2292,11 @@ document.getElementById("editReceiptSaveBtn").addEventListener("click", async fu
   tx.date = date || tx.date;
   tx.notes = notes;
   tx.lines = newLines;
-  await saveTx();
   logActivity("receipt_edit", tf("log_receipt_edited", tx.formNo));
   document.getElementById("editReceiptModalBackdrop").classList.remove("show");
   renderReceiptsTab();
   toast(t("t_receipt_updated"));
+  saveTx().catch(function(e){ console.error("Background save failed:", e); });
 });
 
 // ---------------- SAVE / LOAD DATA FILE (saves as a real, self-contained HTML app) ----------------
@@ -2477,11 +2489,10 @@ function movePartyToProject(name){
     }
   });
   if(count===0){ toast(t("t_nothing_to_move")); return; }
-  saveTx().then(function(){
-    logActivity("reclassify", tf("log_moved_to_project", name, count));
-    renderCurrentReportTab();
-    toast(tf("t_moved_to_project", name));
-  });
+  logActivity("reclassify", tf("log_moved_to_project", name, count));
+  renderCurrentReportTab();
+  toast(tf("t_moved_to_project", name));
+  saveTx().catch(function(e){ console.error("Background save failed:", e); });
 }
 function movePartyToSupplier(name){
   if(!requirePermission("reclassifyReports")) return;
@@ -2492,11 +2503,10 @@ function movePartyToSupplier(name){
     }
   });
   if(count===0){ toast(t("t_nothing_to_move")); return; }
-  saveTx().then(function(){
-    logActivity("reclassify", tf("log_moved_to_supplier", name, count));
-    renderCurrentReportTab();
-    toast(tf("t_moved_to_supplier", name));
-  });
+  logActivity("reclassify", tf("log_moved_to_supplier", name, count));
+  renderCurrentReportTab();
+  toast(tf("t_moved_to_supplier", name));
+  saveTx().catch(function(e){ console.error("Background save failed:", e); });
 }
 
 // ---- Project analysis ----
@@ -2796,10 +2806,10 @@ function renderHistory(){
           action: action
         });
       }
-      await Promise.all([saveActions(), saveTx(), saveRecycleBin()]);
       logActivity("history_delete", tf("log_history_deleted", action ? action.formNo : actionId));
       renderHistory();
       toast(t("t_moved_to_recycle_bin"));
+      Promise.all([saveActions(), saveTx(), saveRecycleBin()]).catch(function(e){ console.error("Background save failed:", e); });
     });
   });
   renderRecycleBin();
@@ -2853,20 +2863,20 @@ async function restoreFromRecycleBin(rbId){
     if(!isNaN(numericNo) && numericNo>=STATE.meta.formCounter) STATE.meta.formCounter = numericNo+1;
   }
   STATE.recycleBin = STATE.recycleBin.filter(function(e){ return e.id!==rbId; });
-  await Promise.all([saveActions(), saveTx(), saveMeta(), saveRecycleBin()]);
   logActivity("recycle_restore", tf("log_recycle_restored", action.formNo));
   renderHistory();
   toast(t("t_restored"));
+  Promise.all([saveActions(), saveTx(), saveMeta(), saveRecycleBin()]).catch(function(e){ console.error("Background save failed:", e); });
 }
 async function purgeFromRecycleBin(rbId){
   if(!requirePermission("manageRecycleBin")) return;
   if(!confirm(t("t_confirm_purge"))) return;
   var entry = STATE.recycleBin.find(function(e){ return e.id===rbId; });
   STATE.recycleBin = STATE.recycleBin.filter(function(e){ return e.id!==rbId; });
-  await saveRecycleBin();
   logActivity("recycle_purge", tf("log_recycle_purged", entry ? entry.action.formNo : rbId));
   renderRecycleBin();
   toast(t("t_purged"));
+  saveRecycleBin().catch(function(e){ console.error("Background save failed:", e); });
 }
 
 // ---------------- RECEIPT / PRINT (always bilingual, matches the original paper form) ----------------
@@ -2959,34 +2969,44 @@ function openItemCard(code){
     var isPlaceholderNo = isOpening || isNoReceipt; // no real individual receipt number yet — show blank + hint
     var cellRef = 'data-txid="'+esc(r.txId)+'" data-lineidx="'+r.lineIndex+'"';
 
-    var inReturn = (r.type === "IN" && isReturn) ? r.qty : "";
-    var inNormal = (r.type === "IN" && !isReturn) ? r.qty : "";
-    var outInternal = (r.type === "OUT" && r.partyType === "project") ? r.qty : "";
-    var outExternal = (r.type === "OUT" && r.partyType === "client") ? r.qty : "";
+    var whichQtyCol = (r.type==="IN" && isReturn) ? "return" : (r.type==="IN" && !isReturn) ? "normal" :
+      (r.type==="OUT" && r.partyType==="project") ? "internal" : (r.type==="OUT" && r.partyType==="client") ? "external" : null;
+    var currentClass = { "return":"returned", "normal":"received", "internal":"internal", "external":"sold" }[whichQtyCol] || "received";
 
-    var dateCell, formNoCell, priceCell;
+    var dateCell, formNoCell, priceCell, noteCell, typeCell;
+    var qtyCells = { "return":"", "normal":"", "internal":"", "external":"" };
     if(canEdit){
       dateCell = '<input type="date" class="ic-cell ic-date" '+cellRef+' value="'+esc(r.date||"")+'">';
       formNoCell = '<input type="text" class="ic-cell ic-formno mono" '+cellRef+' value="'+(isPlaceholderNo?"":esc(r.formNo))+'" placeholder="'+t("itemcard_missing_no")+'">';
       priceCell = '<input type="number" step="0.01" class="ic-cell ic-price" '+cellRef+' value="'+(r.unitPrice!=null?Number(r.unitPrice):"")+'">';
+      if(whichQtyCol) qtyCells[whichQtyCol] = '<input type="number" step="any" class="ic-cell ic-qty" '+cellRef+' value="'+r.qty+'">';
+      var notePlaceholder = isOpening ? t("itemcard_opening") : (isNoReceipt ? t("itemcard_norcpt") : "");
+      noteCell = '<input type="text" class="ic-cell ic-note" '+cellRef+' value="'+esc(r.note||"")+'" placeholder="'+esc(notePlaceholder)+'">';
+      typeCell = '<select class="ic-cell ic-type" '+cellRef+'>'+
+        ['received','returned','internal','sold'].map(function(c){ return '<option value="'+c+'"'+(c===currentClass?' selected':'')+'>'+t("class_"+c)+'</option>'; }).join("")+
+        '</select>';
     } else {
       dateCell = esc(r.date||"");
       formNoCell = isPlaceholderNo ? "—" : esc(r.formNo);
       priceCell = (r.unitPrice!=null ? Number(r.unitPrice).toFixed(2) : "");
+      if(whichQtyCol) qtyCells[whichQtyCol] = r.qty;
+      var noteDisplay = isOpening ? t("itemcard_opening") : (isNoReceipt ? t("itemcard_norcpt") : (r.note || ""));
+      noteCell = esc(noteDisplay);
+      typeCell = t("class_"+currentClass);
     }
-    var noteDisplay = isOpening ? t("itemcard_opening") : (isNoReceipt ? t("itemcard_norcpt") : (r.note || ""));
 
     return '<tr>'+
       '<td class="num">'+(idx+1)+'</td>'+
       '<td class="num">'+dateCell+'</td>'+
       '<td class="num mono">'+formNoCell+'</td>'+
       '<td class="num">'+priceCell+'</td>'+
-      '<td class="num">'+inReturn+'</td>'+
-      '<td class="num">'+inNormal+'</td>'+
-      '<td class="num">'+outInternal+'</td>'+
-      '<td class="num">'+outExternal+'</td>'+
+      '<td class="num">'+typeCell+'</td>'+
+      '<td class="num">'+qtyCells["return"]+'</td>'+
+      '<td class="num">'+qtyCells["normal"]+'</td>'+
+      '<td class="num">'+qtyCells["internal"]+'</td>'+
+      '<td class="num">'+qtyCells["external"]+'</td>'+
       '<td class="num"><b>'+balance+'</b></td>'+
-      '<td class="desc">'+esc(noteDisplay)+'</td>'+
+      '<td class="desc">'+noteCell+'</td>'+
     '</tr>';
   }).join("");
 
@@ -3004,6 +3024,7 @@ function openItemCard(code){
       '<th rowspan="2">'+t("th_card_date")+'</th>'+
       '<th rowspan="2">'+t("th_card_receipt")+'</th>'+
       '<th rowspan="2">'+t("th_card_price")+'</th>'+
+      '<th rowspan="2">'+t("th_card_type")+'</th>'+
       '<th colspan="2">'+t("card_in_group")+'</th>'+
       '<th colspan="2">'+t("card_out_group")+'</th>'+
       '<th rowspan="2">'+t("th_card_balance")+'</th>'+
@@ -3012,7 +3033,7 @@ function openItemCard(code){
       '<th>'+t("th_card_in_return")+'</th><th>'+t("th_card_in_normal")+'</th>'+
       '<th>'+t("th_card_out_internal")+'</th><th>'+t("th_card_out_external")+'</th>'+
     '</tr></thead>'+
-    '<tbody>'+(bodyRows || '<tr><td colspan="10" style="text-align:center; color:var(--muted);">'+t("empty_no_tx")+'</td></tr>')+'</tbody></table>';
+    '<tbody>'+(bodyRows || '<tr><td colspan="11" style="text-align:center; color:var(--muted);">'+t("empty_no_tx")+'</td></tr>')+'</tbody></table>';
 
   document.getElementById("itemCardPaper").innerHTML = html;
   document.getElementById("itemCardOverlay").classList.add("show");
@@ -3029,49 +3050,144 @@ function wireItemCardCells(){
   paper.querySelectorAll(".ic-price").forEach(function(inp){
     inp.addEventListener("change", function(){ commitLinePrice(inp.dataset.txid, Number(inp.dataset.lineidx), inp.value); });
   });
+  paper.querySelectorAll(".ic-qty").forEach(function(inp){
+    inp.addEventListener("change", function(){ commitLineQty(inp.dataset.txid, Number(inp.dataset.lineidx), inp.value); });
+  });
+  paper.querySelectorAll(".ic-note").forEach(function(inp){
+    inp.addEventListener("change", function(){ commitLineNote(inp.dataset.txid, Number(inp.dataset.lineidx), inp.value); });
+  });
+  paper.querySelectorAll(".ic-type").forEach(function(sel){
+    sel.addEventListener("change", function(){ commitLineType(sel.dataset.txid, Number(sel.dataset.lineidx), sel.value); });
+  });
 }
 // Changing the receipt number can mean "move this one line onto a different page" — the same
 // one-number-one-page rule the rest of the app follows, so this never creates a duplicate page
-// and never disturbs any other item that happens to share the old or new page.
+// and never disturbs any other item that happens to share the old or new page. Clearing it
+// entirely moves the line onto a fresh, uniquely-tagged "no receipt" placeholder instead of
+// rejecting the edit — which is what makes it show blank again, same as before it was ever set.
+// Helper used by every Item Card commit below: never force the card back open if the person
+// has already closed it — this is what stops a slow/queued save from popping it back open.
+function itemCardIsOpen(){
+  var overlay = document.getElementById("itemCardOverlay");
+  return !!(overlay && overlay.classList.contains("show"));
+}
+function refreshItemCardIfOpen(){ if(itemCardIsOpen()) openItemCard(currentItemCardCode); }
+
 async function commitLineFormNo(txId, lineIndex, newFormNo){
-  if(!requirePermission("editItems")){ openItemCard(currentItemCardCode); return; }
+  if(!requirePermission("editItems")){ refreshItemCardIfOpen(); return; }
   var tx = STATE.tx.find(function(x){ return x.id===txId; });
   if(!tx) return;
   var line = tx.lines[lineIndex];
   if(!line) return;
-  if(!newFormNo){ toast(t("t_formno_required")); openItemCard(currentItemCardCode); return; }
-  if(String(newFormNo).trim() === String(tx.formNo).trim()){ return; }
+  // Blank means "I don't know the receipt number" — move it to a fresh, uniquely-tagged
+  // placeholder so it correctly shows blank again, rather than rejecting the edit.
+  var targetFormNo = newFormNo ? newFormNo : ("NO-RECEIPT-" + line.code + "-" + Date.now());
+  if(String(targetFormNo).trim() === String(tx.formNo).trim()){ return; }
 
   tx.lines.splice(lineIndex, 1);
   if(tx.lines.length === 0){ STATE.tx = STATE.tx.filter(function(x){ return x.id!==tx.id; }); }
-  var dest = STATE.tx.find(function(x){ return String(x.formNo).trim()===newFormNo; });
+  var dest = STATE.tx.find(function(x){ return String(x.formNo).trim()===String(targetFormNo).trim(); });
+  var saveJobs = [];
   if(dest){
     dest.lines.push(line);
-    await saveTx();
+    saveJobs.push(saveTx());
   } else {
-    var newTx = { id:"TX-"+Date.now(), formNo:newFormNo, date:tx.date, type:tx.type,
+    var newTx = { id:"TX-"+Date.now(), formNo:targetFormNo, date:tx.date, type:tx.type,
       partyType:tx.partyType, inSubType:tx.inSubType, partyName:tx.partyName,
       recipientName:tx.recipientName||"", notes:"", lines:[line], createdAt:Date.now() };
     STATE.tx.push(newTx);
-    var numericNo = parseInt(newFormNo,10);
-    if(!isNaN(numericNo) && numericNo>=STATE.meta.formCounter) STATE.meta.formCounter = numericNo+1;
-    await Promise.all([saveTx(), saveMeta()]);
+    saveJobs.push(saveTx());
+    if(newFormNo){
+      var numericNo = parseInt(newFormNo,10);
+      if(!isNaN(numericNo) && numericNo>=STATE.meta.formCounter) STATE.meta.formCounter = numericNo+1;
+      saveJobs.push(saveMeta());
+    }
   }
-  logActivity("item_card_line_edit", tf("log_line_receipt_set", line.code, newFormNo));
-  openItemCard(currentItemCardCode);
+  logActivity("item_card_line_edit", newFormNo ? tf("log_line_receipt_set", line.code, newFormNo) : tf("log_line_receipt_cleared", line.code));
+  refreshItemCardIfOpen();
   toast(t("t_saved"));
+  Promise.all(saveJobs).catch(function(e){ console.error("Background save failed:", e); });
+}
+async function commitLineQty(txId, lineIndex, newQtyRaw){
+  if(!requirePermission("editItems")){ refreshItemCardIfOpen(); return; }
+  var tx = STATE.tx.find(function(x){ return x.id===txId; });
+  if(!tx) return;
+  var line = tx.lines[lineIndex];
+  if(!line) return;
+  var newQty = Number(newQtyRaw);
+  if(!newQty || newQty<=0 || isNaN(newQty)){ toast(tf("t_qty_invalid", line.code)); refreshItemCardIfOpen(); return; }
+  if(Number(line.qty) === newQty) return;
+  line.qty = newQty;
+  logActivity("item_card_line_edit", tf("log_line_qty_set", line.code, newQty));
+  refreshItemCardIfOpen();
+  toast(t("t_saved"));
+  saveTx().catch(function(e){ console.error("Background save failed:", e); });
+}
+async function commitLineNote(txId, lineIndex, newNote){
+  if(!requirePermission("editItems")){ refreshItemCardIfOpen(); return; }
+  var tx = STATE.tx.find(function(x){ return x.id===txId; });
+  if(!tx) return;
+  var line = tx.lines[lineIndex];
+  if(!line) return;
+  if((line.note||"") === newNote) return;
+  line.note = newNote;
+  logActivity("item_card_line_edit", tf("log_line_note_set", line.code));
+  refreshItemCardIfOpen();
+  toast(t("t_saved"));
+  saveTx().catch(function(e){ console.error("Background save failed:", e); });
+}
+// Received/Returned/Internal Use/Sold is really a property of the whole page (its type + who it
+// went to), not of one line — so reclassifying only THIS line either updates the page in place
+// (safe when it's the only line on that page) or splits it onto its own new placeholder page,
+// so any other item sharing the original receipt number is never disturbed or reclassified with it.
+async function commitLineType(txId, lineIndex, newClass){
+  if(!requirePermission("editItems")){ refreshItemCardIfOpen(); return; }
+  var tx = STATE.tx.find(function(x){ return x.id===txId; });
+  if(!tx) return;
+  var line = tx.lines[lineIndex];
+  if(!line) return;
+  var CLASS_MAP = {
+    received: { type:"IN", partyType:"project", inSubType:"normal" },
+    returned: { type:"IN", partyType:"project", inSubType:"returned" },
+    internal: { type:"OUT", partyType:"project", inSubType:null },
+    sold:     { type:"OUT", partyType:"client", inSubType:null }
+  };
+  var target = CLASS_MAP[newClass];
+  if(!target) return;
+  var currentClass = (tx.type==="IN") ? (/return/i.test(line.note||"") ? "returned" : "received") : (tx.partyType==="client" ? "sold" : "internal");
+  if(currentClass === newClass) return;
+
+  var didSplit = false;
+  if(tx.lines.length === 1){
+    tx.type = target.type; tx.partyType = target.partyType; tx.inSubType = target.inSubType;
+  } else {
+    didSplit = true;
+    tx.lines.splice(lineIndex, 1);
+    var newTx = { id:"TX-"+Date.now(), formNo:"NO-RECEIPT-"+line.code+"-"+Date.now(), date:tx.date, type:target.type,
+      partyType:target.partyType, inSubType:target.inSubType, partyName:tx.partyName,
+      recipientName:tx.recipientName||"", notes:"", lines:[line], createdAt:Date.now() };
+    STATE.tx.push(newTx);
+  }
+  // Keep the free-text note in sync with the "returned" flag other parts of the app match against.
+  if(newClass==="returned" && !/return/i.test(line.note||"")) line.note = (line.note?line.note+" ":"")+"Return";
+  if(newClass!=="returned") line.note = (line.note||"").replace(/\breturn\b/i,"").trim();
+
+  logActivity("item_card_line_edit", tf("log_line_type_set", line.code, t("class_"+newClass)));
+  refreshItemCardIfOpen();
+  toast(didSplit ? t("t_reclassified_split") : t("t_saved"));
+  saveTx().catch(function(e){ console.error("Background save failed:", e); });
 }
 async function commitLineDate(txId, newDate){
-  if(!requirePermission("editItems")){ openItemCard(currentItemCardCode); return; }
+  if(!requirePermission("editItems")){ refreshItemCardIfOpen(); return; }
   var tx = STATE.tx.find(function(x){ return x.id===txId; });
   if(!tx || !newDate || tx.date===newDate) return;
   tx.date = newDate;
-  await saveTx();
-  openItemCard(currentItemCardCode);
+  refreshItemCardIfOpen();
   toast(t("t_saved"));
+  saveTx().catch(function(e){ console.error("Background save failed:", e); });
 }
 async function commitLinePrice(txId, lineIndex, newPriceRaw){
-  if(!requirePermission("editItems")){ openItemCard(currentItemCardCode); return; }
+  if(!requirePermission("editItems")){ refreshItemCardIfOpen(); return; }
   var tx = STATE.tx.find(function(x){ return x.id===txId; });
   if(!tx) return;
   var line = tx.lines[lineIndex];
@@ -3079,9 +3195,9 @@ async function commitLinePrice(txId, lineIndex, newPriceRaw){
   var newPrice = newPriceRaw==="" ? null : Number(newPriceRaw);
   if(line.unitPrice === newPrice) return;
   line.unitPrice = newPrice;
-  await saveTx();
-  openItemCard(currentItemCardCode);
+  refreshItemCardIfOpen();
   toast(t("t_saved"));
+  saveTx().catch(function(e){ console.error("Background save failed:", e); });
 }
 
 document.getElementById("btnCloseItemCard").addEventListener("click", function(){
@@ -3246,20 +3362,20 @@ document.getElementById("btnToggleLock").addEventListener("click", async functio
     if(!anyAdmin){ toast(t("t_need_admin_before_lock")); return; }
     if(!confirm(t("t_confirm_lock"))) return;
     STATE.meta.locked = true;
-    await saveMeta();
     logActivity("lock", t("log_locked"));
     currentUser = null;
     applyPermissionUI();
     renderUsersTab();
     checkLockGate();
+    saveMeta().catch(function(e){ console.error("Background save failed:", e); });
   } else {
     if(!requirePermission("manageUsers")) return;
     if(!confirm(t("t_confirm_unlock"))) return;
     STATE.meta.locked = false;
-    await saveMeta();
     logActivity("unlock", t("log_unlocked"));
     applyPermissionUI();
     renderUsersTab();
+    saveMeta().catch(function(e){ console.error("Background save failed:", e); });
   }
 });
 
@@ -3308,10 +3424,10 @@ document.getElementById("userSaveBtn").addEventListener("click", async function(
     STATE.users.push({ id:"USR-"+Date.now(), name:name, pin:pin, permissions:perms, createdAt:Date.now() });
     logActivity("user_add", tf("log_user_added", name));
   }
-  await saveUsers();
   document.getElementById("userModalBackdrop").classList.remove("show");
   renderUsersTab();
   toast(t("t_saved"));
+  saveUsers().catch(function(e){ console.error("Background save failed:", e); });
 });
 document.getElementById("userDeleteBtn").addEventListener("click", async function(){
   var editId = document.getElementById("userEditId").value;
@@ -3320,12 +3436,12 @@ document.getElementById("userDeleteBtn").addEventListener("click", async functio
   if(!confirm(t("t_confirm_delete_user"))) return;
   STATE.users = STATE.users.filter(function(x){ return x.id!==editId; });
   if(currentUser && currentUser.id===editId) currentUser = null;
-  await saveUsers();
   logActivity("user_delete", tf("log_user_deleted", u ? u.name : editId));
   document.getElementById("userModalBackdrop").classList.remove("show");
   renderUsersTab();
   applyPermissionUI();
   toast(t("t_item_deleted"));
+  saveUsers().catch(function(e){ console.error("Background save failed:", e); });
 });
 
 async function boot(){
