@@ -267,7 +267,7 @@
       <div data-i18n="sidebar_note">Everyone who opens this link shares this data.<br>Sintech For Engineering Supplies &amp; Trade</div>
       <button class="btn ghost sm" id="btnLoadFile" style="margin-top:10px; width:100%; color:#fff; border-color:rgba(255,255,255,.3);" data-i18n="btn_load">📂 Load data file</button>
       <input type="file" id="loadFileInput" accept=".html,.json" style="display:none;">
-      <div style="margin-top:10px; font-size:10px; color:rgba(255,255,255,.45); text-align:center;">Build 2026-09-15 08:17 UTC</div>
+      <div style="margin-top:10px; font-size:10px; color:rgba(255,255,255,.45); text-align:center;">Build 2026-09-15 09:02 UTC</div>
     </div>
   </div>
 
@@ -1688,12 +1688,37 @@ async function runDataMigrations(){
   var openingAction = STATE.actions.find(function(a){ return a.id === "ACT-OPENING"; });
   if(openingAction && openingAction.date){ openingAction.date = ""; actionsChanged = true; }
 
+  // "Returned" used to be detected by the word "return" appearing in a line's free-text note —
+  // but that note is about to become the party name instead, so bake the classification into its
+  // own explicit flag first, from whatever the note currently says, before it gets overwritten.
+  STATE.tx.forEach(function(tx){
+    tx.lines.forEach(function(l){
+      if(typeof l.isReturn !== "boolean"){ l.isReturn = /return/i.test(l.note||""); linesChanged = true; }
+    });
+  });
+  // One-time: Notes should show who a receipt was from/to, not the old free-text reason — runs
+  // exactly once (flagged in meta) so it never fights with notes the person edits afterward.
+  var metaChanged = false;
+  if(!STATE.meta.notesMigratedToPartyName){
+    STATE.tx.forEach(function(tx){
+      if(tx.id === "OPENING-MIGRATION") return; // keeps its own friendly label, not a party name
+      var isNoReceipt = String(tx.formNo).indexOf("NO-RECEIPT") === 0;
+      tx.lines.forEach(function(l){
+        l.note = isNoReceipt ? "" : (tx.partyName || "");
+      });
+    });
+    STATE.meta.notesMigratedToPartyName = true;
+    linesChanged = true;
+    metaChanged = true;
+  }
+
   var jobs = [];
   if(itemsChanged) jobs.push(saveItems());
   if(linesChanged) jobs.push(saveTx());
   if(actionsChanged) jobs.push(saveActions());
+  if(metaChanged) jobs.push(saveMeta());
   if(jobs.length) await Promise.all(jobs);
-  return itemsChanged || linesChanged || actionsChanged;
+  return itemsChanged || linesChanged || actionsChanged || metaChanged;
 }
 function populateItemCategorySelect(){
   var sel = document.getElementById("itemCategory");
@@ -2055,7 +2080,8 @@ document.getElementById("btnSaveTx").addEventListener("click", async function(){
       if(qty>avail){ toast(tf("t_stock_avail", item.code, avail)); return; }
     }
     lines.push({ itemId:item.code, code:item.code, name:item.name, unit:item.unit,
-      qty:qty, unitPrice: (l.unitPrice!=="" && l.unitPrice!=null) ? Number(l.unitPrice) : null });
+      qty:qty, unitPrice: (l.unitPrice!=="" && l.unitPrice!=null) ? Number(l.unitPrice) : null,
+      isReturn: (inSubType==="returned"), note: partyName });
   }
   if(lines.length===0){ toast(t("t_add_one_line")); return; }
 
@@ -2306,6 +2332,7 @@ document.getElementById("editReceiptSaveBtn").addEventListener("click", async fu
     if(!qty || qty<=0){ toast(tf("t_qty_invalid", item.code)); return; }
     newLines.push({ itemId:item.code, code:item.code, name:item.name, unit:item.unit,
       qty:qty, unitPrice:(l.unitPrice!=="" && l.unitPrice!=null) ? Number(l.unitPrice) : null,
+      isReturn: (inSubType==="returned"), note: partyName,
       actionId: l.actionId || ("ACT-EDIT-"+Date.now()) });
   }
   if(newLines.length===0){ toast(t("t_add_one_line")); return; }
@@ -2656,8 +2683,10 @@ function groupReturns(){
   var groups = {};
   STATE.tx.forEach(function(tx){
     if(tx.type !== "IN") return;
-    if(tx.inSubType !== "returned" && !tx.isProjectReturn) return;
     tx.lines.forEach(function(l){
+      // Checked per line, not per page — a handful of real receipts mix returned and normal
+      // items on the very same page, so gating the whole page would misclassify some of them.
+      if(!tx.isProjectReturn && !l.isReturn) return;
       var item = STATE.items.find(function(i){ return i.code===l.itemId; });
       var key = l.itemId;
       if(!groups[key]) groups[key] = { code:l.itemId, name:(item?item.name:l.name), unit:(item?item.unit:l.unit),
@@ -2976,8 +3005,8 @@ function openItemCard(code){
     tx.lines.forEach(function(l, lineIndex){
       if(l.itemId === code){
         rows.push({
-          date: tx.date, formNo: tx.formNo, type: tx.type, partyType: tx.partyType,
-          qty: Number(l.qty||0), unitPrice: l.unitPrice, note: l.note || "", createdAt: tx.createdAt || 0,
+          date: tx.date, formNo: tx.formNo, type: tx.type, partyType: tx.partyType, partyName: tx.partyName || "",
+          qty: Number(l.qty||0), unitPrice: l.unitPrice, note: l.note || "", isReturn: !!l.isReturn, createdAt: tx.createdAt || 0,
           txId: tx.id, lineIndex: lineIndex
         });
       }
@@ -2991,10 +3020,14 @@ function openItemCard(code){
   var balance = 0;
   var bodyRows = rows.map(function(r, idx){
     balance += r.type === "IN" ? r.qty : -r.qty;
-    var isReturn = /return/i.test(r.note || "");
+    var isReturn = r.isReturn;
     var isOpening = r.formNo === "OPENING";
     var isNoReceipt = String(r.formNo).indexOf("NO-RECEIPT") === 0;
     var isPlaceholderNo = isOpening || isNoReceipt; // no real individual receipt number yet — show blank + hint
+    // Notes always reflect who the movement was from/to — the opening page gets its own friendly
+    // label, an unreceipted line stays blank until it has a real page, and everything else shows
+    // that page's party name (never the old free-text reason).
+    var effectiveNote = isOpening ? t("itemcard_opening") : (isNoReceipt ? "" : r.partyName);
     var cellRef = 'data-txid="'+esc(r.txId)+'" data-lineidx="'+r.lineIndex+'"';
 
     var whichQtyCol = (r.type==="IN" && isReturn) ? "return" : (r.type==="IN" && !isReturn) ? "normal" :
@@ -3008,8 +3041,9 @@ function openItemCard(code){
       formNoCell = '<input type="text" class="ic-cell ic-formno mono" '+cellRef+' value="'+(isPlaceholderNo?"":esc(r.formNo))+'" placeholder="'+t("itemcard_missing_no")+'">';
       priceCell = '<input type="number" step="0.01" class="ic-cell ic-price" '+cellRef+' value="'+(r.unitPrice!=null?Number(r.unitPrice):"")+'">';
       if(whichQtyCol) qtyCells[whichQtyCol] = '<input type="number" step="any" class="ic-cell ic-qty" '+cellRef+' value="'+r.qty+'">';
-      var notePlaceholder = isOpening ? t("itemcard_opening") : (isNoReceipt ? t("itemcard_norcpt") : "");
-      noteCell = '<input type="text" class="ic-cell ic-note" '+cellRef+' value="'+esc(r.note||"")+'" placeholder="'+esc(notePlaceholder)+'">';
+      noteCell = isOpening
+        ? '<span style="color:var(--muted);">'+esc(effectiveNote)+'</span>'
+        : '<input type="text" class="ic-cell ic-note" '+cellRef+' value="'+esc(effectiveNote)+'" placeholder="'+t("itemcard_missing_no")+'">';
       typeCell = '<select class="ic-cell ic-type" '+cellRef+'>'+
         ['received','returned','internal','sold'].map(function(c){ return '<option value="'+c+'"'+(c===currentClass?' selected':'')+'>'+t("class_"+c)+'</option>'; }).join("")+
         '</select>';
@@ -3018,8 +3052,7 @@ function openItemCard(code){
       formNoCell = isPlaceholderNo ? "—" : esc(r.formNo);
       priceCell = (r.unitPrice!=null ? Number(r.unitPrice).toFixed(2) : "");
       if(whichQtyCol) qtyCells[whichQtyCol] = r.qty;
-      var noteDisplay = isOpening ? t("itemcard_opening") : (isNoReceipt ? t("itemcard_norcpt") : (r.note || ""));
-      noteCell = esc(noteDisplay);
+      noteCell = esc(effectiveNote);
       typeCell = t("class_"+currentClass);
     }
 
@@ -3182,7 +3215,7 @@ async function commitLineType(txId, lineIndex, newClass){
   };
   var target = CLASS_MAP[newClass];
   if(!target) return;
-  var currentClass = (tx.type==="IN") ? (/return/i.test(line.note||"") ? "returned" : "received") : (tx.partyType==="client" ? "sold" : "internal");
+  var currentClass = (tx.type==="IN") ? (line.isReturn ? "returned" : "received") : (tx.partyType==="client" ? "sold" : "internal");
   if(currentClass === newClass) return;
 
   var didSplit = false;
@@ -3196,9 +3229,7 @@ async function commitLineType(txId, lineIndex, newClass){
       recipientName:tx.recipientName||"", notes:"", lines:[line], createdAt:Date.now() };
     STATE.tx.push(newTx);
   }
-  // Keep the free-text note in sync with the "returned" flag other parts of the app match against.
-  if(newClass==="returned" && !/return/i.test(line.note||"")) line.note = (line.note?line.note+" ":"")+"Return";
-  if(newClass!=="returned") line.note = (line.note||"").replace(/\breturn\b/i,"").trim();
+  line.isReturn = (newClass === "returned"); // the explicit flag now used everywhere — notes stay untouched by this
 
   logActivity("item_card_line_edit", tf("log_line_type_set", line.code, t("class_"+newClass)));
   refreshItemCardIfOpen();
