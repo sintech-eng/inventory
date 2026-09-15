@@ -29,7 +29,7 @@
     height:100%; overflow:hidden; /* forces #main to be the only scrolling region — this is what
     keeps the sidebar and each tab's sticky title/search bar from drifting away on scroll */
   }
-  code, .mono{ font-family: ui-monospace, "SF Mono", Consolas, monospace; }
+  code, .mono{ font-family: ui-monospace, "SF Mono", Consolas, monospace; white-space:nowrap; }
   #app{ display:flex; height:100vh; direction:ltr; }
 
   /* ---------- SIDEBAR ---------- */
@@ -284,7 +284,7 @@
       <div data-i18n="sidebar_note">Everyone who opens this link shares this data.<br>Sintech For Engineering Supplies &amp; Trade</div>
       <button class="btn ghost sm" id="btnLoadFile" style="margin-top:10px; width:100%; color:#fff; border-color:rgba(255,255,255,.3);" data-i18n="btn_load">📂 Load data file</button>
       <input type="file" id="loadFileInput" accept=".html,.json" style="display:none;">
-      <div style="margin-top:10px; font-size:10px; color:rgba(255,255,255,.45); text-align:center;">Build 2026-09-15 10:52 UTC</div>
+      <div style="margin-top:10px; font-size:10px; color:rgba(255,255,255,.45); text-align:center;">Build 2026-09-15 13:07 UTC</div>
     </div>
   </div>
 
@@ -572,6 +572,16 @@
       <div class="field"><label data-i18n="lbl_user_name">Name</label><input id="userName"></div>
       <div class="field"><label data-i18n="lbl_user_pin">PIN (4 digits)</label><input id="userPin" inputmode="numeric" maxlength="4" placeholder="1234"></div>
     </div>
+    <div class="row" style="max-width:280px;">
+      <div class="field">
+        <label data-i18n="lbl_user_default_lang">Default Language</label>
+        <select id="userDefaultLang">
+          <option value="en">English</option>
+          <option value="ar">العربية</option>
+          <option value="tr">Türkçe</option>
+        </select>
+      </div>
+    </div>
     <p style="font-size:11.5px; color:var(--muted); margin:0 0 10px;" data-i18n="pin_note">This PIN is only a basic lock for shared use on one computer — anyone who can view this file's code can bypass it, so don't use a sensitive password here.</p>
     <div id="permissionsGrid" style="display:grid; grid-template-columns:1fr 1fr; gap:6px 18px; margin-bottom:8px;"></div>
     <div class="actions" style="justify-content:space-between;">
@@ -623,6 +633,7 @@
     <div class="row"><div class="field"><label data-i18n="lbl_name">Name</label><input id="itemName" data-i18n-ph="ph_item_name" placeholder="Item name"></div></div>
     <div class="row"><div class="field"><label data-i18n="lbl_category">Category</label><select id="itemCategory"></select></div></div>
     <div class="row"><div class="field"><label data-i18n="lbl_cost">Purchase Price (optional)</label><input id="itemCost" type="number" step="0.01" placeholder="—"></div></div>
+    <div class="row" id="itemOpeningQtyField"><div class="field"><label data-i18n="lbl_opening_qty">Starting Quantity (optional)</label><input id="itemOpeningQty" type="number" step="any" placeholder="0"></div></div>
     <div class="actions" style="justify-content:space-between;">
       <button class="btn danger" id="itemDeleteBtn" data-i18n="btn_delete_item">Delete Item</button>
       <div style="display:flex; gap:8px;">
@@ -892,6 +903,7 @@ var I18N = {
 
     modal_add_item_title:"Add Item", modal_edit_item_title:"Edit Item",
     lbl_code:"Code", lbl_unit:"Unit", lbl_name:"Name", lbl_category:"Category", lbl_cost:"Purchase Price (optional)",
+    lbl_opening_qty:"Starting Quantity (optional)",
     unit_meter:"Meter", unit_piece:"Piece", unit_roll:"Roll", unit_packet:"Packet", unit_box:"Box", unit_unlisted:"not in the standard list",
     btn_delete_item:"Delete Item", t_confirm_delete_item:"Delete this item permanently? Its past receipts stay in history, but it won't be selectable in new ones.", t_item_deleted:"Item deleted",
     ph_item_name:"Item name", ph_category:"e.g. General Electrical",
@@ -966,7 +978,7 @@ var I18N = {
     nav_users:"Users",
     perm_view_dashboard:"View Dashboard", perm_view_items:"View Items", perm_add_items:"Add Items", perm_edit_items:"Edit Items", perm_delete_items:"Delete Items",
     perm_new_receipt:"Create Receipts", perm_view_receipts:"View Receipts", perm_edit_receipts:"Edit Receipts", perm_verify_receipts:"Verify Receipts", perm_delete_receipts:"Delete Receipts",
-    perm_adjust_stock:"Adjust Stock to Zero",
+    perm_delete_card_rows:"Delete Item Card Rows",
     btn_mark_out_of_stock:"Mark as Out of Stock", t_already_zero:"This item is already at zero.",
     t_confirm_zero_stock:"Bring %s to zero? Current balance is %s — this will record an adjustment movement for the difference.",
     adjustment_party_name:"Inventory Adjustment", adjustment_note:"Balance manually adjusted to zero (stock take / write-off).",
@@ -994,7 +1006,7 @@ var I18N = {
     perm_count:"%s of %s permissions", lock_status_locked:"The app is locked", lock_status_open:"The app is open (unlocked)",
     btn_lock:"🔒 Lock the App", btn_unlock:"🔓 Unlock the App",
     modal_add_user_title:"Add User", modal_edit_user_title:"Edit User",
-    lbl_user_name:"Name", lbl_user_pin:"PIN (4 digits)",
+    lbl_user_name:"Name", lbl_user_pin:"PIN (4 digits)", lbl_user_default_lang:"Default Language",
     pin_note:"This PIN is only a basic lock for shared use on one computer — anyone who can view this file's code can bypass it, so don't use a sensitive password here.",
     btn_delete_user:"Delete User",
     signin_title:"Sign In", btn_sign_in:"Sign In", btn_sign_out:"Sign Out", boot_gate_msg:"Checking access…",
@@ -1048,6 +1060,7 @@ var I18N = {
 
     modal_add_item_title:"إضافة صنف", modal_edit_item_title:"تعديل صنف",
     lbl_code:"الكود", lbl_unit:"الوحدة", lbl_name:"الاسم", lbl_category:"الفئة", lbl_cost:"سعر الشراء (اختياري)",
+    lbl_opening_qty:"الكمية الافتتاحية (اختياري)",
     unit_meter:"متر", unit_piece:"قطعة", unit_roll:"لفة", unit_packet:"باكيت", unit_box:"صندوق", unit_unlisted:"ليست من القائمة القياسية",
     btn_delete_item:"حذف الصنف", t_confirm_delete_item:"حذف هذا الصنف نهائيًا؟ ستبقى إذوناته السابقة في السجل، لكن لن يمكن اختياره في إذون جديدة.", t_item_deleted:"تم حذف الصنف",
     ph_item_name:"اسم الصنف", ph_category:"مثال: كهرباء عامة",
@@ -1122,7 +1135,7 @@ var I18N = {
     nav_users:"المستخدمين",
     perm_view_dashboard:"عرض لوحة المتابعة", perm_view_items:"عرض الأصناف", perm_add_items:"إضافة أصناف", perm_edit_items:"تعديل أصناف", perm_delete_items:"حذف أصناف",
     perm_new_receipt:"إنشاء إذونات", perm_view_receipts:"عرض الإذونات", perm_edit_receipts:"تعديل الإذونات", perm_verify_receipts:"مطابقة الإذونات", perm_delete_receipts:"حذف الإذونات",
-    perm_adjust_stock:"تصفير الرصيد",
+    perm_delete_card_rows:"حذف صفوف بطاقة الصنف",
     btn_mark_out_of_stock:"تحديد كنافذ من المخزون", t_already_zero:"هذا الصنف رصيده صفر بالفعل.",
     t_confirm_zero_stock:"تصفير رصيد %s؟ الرصيد الحالي %s — سيتم تسجيل حركة تسوية بالفرق.",
     adjustment_party_name:"تسوية المخزون", adjustment_note:"تم تعديل الرصيد يدويًا إلى صفر (جرد / إعدام).",
@@ -1150,7 +1163,7 @@ var I18N = {
     perm_count:"%s من %s صلاحية", lock_status_locked:"التطبيق مقفل", lock_status_open:"التطبيق مفتوح (غير مقفل)",
     btn_lock:"🔒 قفل التطبيق", btn_unlock:"🔓 فتح التطبيق",
     modal_add_user_title:"إضافة مستخدم", modal_edit_user_title:"تعديل مستخدم",
-    lbl_user_name:"الاسم", lbl_user_pin:"الرقم السري (4 أرقام)",
+    lbl_user_name:"الاسم", lbl_user_pin:"الرقم السري (4 أرقام)", lbl_user_default_lang:"اللغة الافتراضية",
     pin_note:"هذا الرقم السري مجرد قفل بسيط للاستخدام المشترك على جهاز واحد — أي شخص يستطيع رؤية كود هذا الملف يمكنه تجاوزه، لذا لا تستخدم كلمة مرور حساسة هنا.",
     btn_delete_user:"حذف المستخدم",
     signin_title:"تسجيل الدخول", btn_sign_in:"تسجيل الدخول", btn_sign_out:"تسجيل الخروج", boot_gate_msg:"جارٍ التحقق من الصلاحية…",
@@ -1204,6 +1217,7 @@ var I18N = {
 
     modal_add_item_title:"Ürün Ekle", modal_edit_item_title:"Ürünü Düzenle",
     lbl_code:"Kod", lbl_unit:"Birim", lbl_name:"İsim", lbl_category:"Kategori", lbl_cost:"Alış Fiyatı (isteğe bağlı)",
+    lbl_opening_qty:"Başlangıç Miktarı (isteğe bağlı)",
     unit_meter:"Metre", unit_piece:"Adet", unit_roll:"Rulo", unit_packet:"Paket", unit_box:"Kutu", unit_unlisted:"standart listede değil",
     btn_delete_item:"Ürünü Sil", t_confirm_delete_item:"Bu ürün kalıcı olarak silinsin mi? Geçmiş fişlerinde kalır, ama yeni fişlerde seçilemez.", t_item_deleted:"Ürün silindi",
     ph_item_name:"Ürün adı", ph_category:"örn. Genel Elektrik",
@@ -1278,7 +1292,7 @@ var I18N = {
     nav_users:"Kullanıcılar",
     perm_view_dashboard:"Paneli Görüntüle", perm_view_items:"Ürünleri Görüntüle", perm_add_items:"Ürün Ekle", perm_edit_items:"Ürün Düzenle", perm_delete_items:"Ürün Sil",
     perm_new_receipt:"Fiş Oluştur", perm_view_receipts:"Fişleri Görüntüle", perm_edit_receipts:"Fişleri Düzenle", perm_verify_receipts:"Fişleri Doğrula", perm_delete_receipts:"Fişleri Sil",
-    perm_adjust_stock:"Stoğu Sıfırla",
+    perm_delete_card_rows:"Ürün Kartı Satırlarını Sil",
     btn_mark_out_of_stock:"Stokta Yok Olarak İşaretle", t_already_zero:"Bu ürün zaten sıfırda.",
     t_confirm_zero_stock:"%s sıfırlansın mı? Mevcut bakiye %s — farkı için bir düzeltme hareketi kaydedilecek.",
     adjustment_party_name:"Stok Düzeltmesi", adjustment_note:"Bakiye manuel olarak sıfıra ayarlandı (stok sayımı / kayıp).",
@@ -1306,7 +1320,7 @@ var I18N = {
     perm_count:"%s / %s yetki", lock_status_locked:"Uygulama kilitli", lock_status_open:"Uygulama açık (kilitsiz)",
     btn_lock:"🔒 Uygulamayı Kilitle", btn_unlock:"🔓 Uygulamanın Kilidini Aç",
     modal_add_user_title:"Kullanıcı Ekle", modal_edit_user_title:"Kullanıcıyı Düzenle",
-    lbl_user_name:"İsim", lbl_user_pin:"PIN (4 haneli)",
+    lbl_user_name:"İsim", lbl_user_pin:"PIN (4 haneli)", lbl_user_default_lang:"Varsayılan Dil",
     pin_note:"Bu PIN, tek bir bilgisayarda paylaşımlı kullanım için basit bir kilittir — bu dosyanın kodunu görebilen herkes bunu aşabilir, bu yüzden burada hassas bir şifre kullanmayın.",
     btn_delete_user:"Kullanıcıyı Sil",
     signin_title:"Giriş Yap", btn_sign_in:"Giriş Yap", btn_sign_out:"Çıkış Yap", boot_gate_msg:"Erişim kontrol ediliyor…",
@@ -1798,6 +1812,46 @@ function syncItemCategoryFromCode(){
 }
 document.getElementById("itemCode").addEventListener("input", syncItemCategoryFromCode);
 
+// Reverse of CATEGORY_MAP: which code prefix(es) belong to each category. Most categories have
+// exactly one prefix; "Panel" has several (EK/AS/ASC/ASD/AST), so for those we default to
+// whichever prefix already has the most items — the one most likely to be what's meant.
+var CATEGORY_TO_PREFIXES = (function(){
+  var map = {};
+  Object.keys(CATEGORY_MAP).forEach(function(p){
+    var cat = CATEGORY_MAP[p];
+    if(!map[cat]) map[cat] = [];
+    map[cat].push(p);
+  });
+  return map;
+})();
+function suggestNextCodeForCategory(category){
+  var prefixes = CATEGORY_TO_PREFIXES[category];
+  if(!prefixes || prefixes.length === 0) return "";
+  var chosenPrefix = prefixes[0];
+  if(prefixes.length > 1){
+    var counts = {};
+    STATE.items.forEach(function(i){
+      var m = String(i.code||"").match(/^([A-Za-z]+)-/);
+      if(m && prefixes.indexOf(m[1]) >= 0) counts[m[1]] = (counts[m[1]]||0) + 1;
+    });
+    var best = prefixes[0], bestCount = -1;
+    prefixes.forEach(function(p){ var c = counts[p]||0; if(c > bestCount){ bestCount = c; best = p; } });
+    chosenPrefix = best;
+  }
+  var maxNum = 0;
+  STATE.items.forEach(function(i){
+    var m = String(i.code||"").match(/^([A-Za-z]+)-(\d+)$/);
+    if(m && m[1] === chosenPrefix){ var n = parseInt(m[2],10); if(n > maxNum) maxNum = n; }
+  });
+  return chosenPrefix + "-" + String(maxNum + 1).padStart(5,"0");
+}
+document.getElementById("itemCategory").addEventListener("change", function(){
+  var codeInput = document.getElementById("itemCode");
+  if(codeInput.disabled) return; // editing an existing item — its code never changes
+  var suggested = suggestNextCodeForCategory(this.value);
+  if(suggested) codeInput.value = suggested;
+});
+
 function populateCatFilter(){
   var sel = document.getElementById("itemCatFilter");
   var current = sel.value;
@@ -1856,10 +1910,18 @@ function openItemModal(code){
   document.getElementById("itemName").value = editing ? item.name : "";
   populateItemCategorySelect();
   document.getElementById("itemCategory").value = editing ? item.category : deriveCategory("");
+  // The select never actually has a "General" option — deriveCategory("") is only meant as a
+  // save-time fallback, not a real choice — so for a brand-new item, fall back to a real option
+  // instead of leaving the dropdown in an unselected (selectedIndex -1) state.
+  if(document.getElementById("itemCategory").selectedIndex === -1){
+    document.getElementById("itemCategory").selectedIndex = 0;
+  }
   populateUnitSelect(editing ? item.unit : "PC");
   var latestPrice = editing ? getLatestPurchasePrice(item.code) : null;
   document.getElementById("itemCost").value = latestPrice!=null ? latestPrice : "";
   document.getElementById("itemDeleteBtn").style.display = editing ? "" : "none";
+  document.getElementById("itemOpeningQtyField").style.display = editing ? "none" : "";
+  document.getElementById("itemOpeningQty").value = "";
   populateCatFilter();
   document.getElementById("itemModalBackdrop").classList.add("show");
 }
@@ -1898,7 +1960,10 @@ document.getElementById("itemSaveBtn").addEventListener("click", async function(
     if(!code){ toast(t("t_code_format")); return; }
     if(STATE.items.some(function(i){ return i.code===code; })){ toast(t("t_code_exists")); return; }
   }
-  var category = deriveCategory(code); // always derived from the code's prefix — never a free choice
+  // Respects whatever category is actually selected in the dropdown — it's pre-filled from the
+  // code's prefix as a convenient default, but a person's own pick always wins, never silently
+  // overridden back to a guess (which is what was happening for any prefix outside the known map).
+  var category = document.getElementById("itemCategory").value || deriveCategory(code);
 
   if(origCode){
     var it = STATE.items.find(function(i){ return i.code===origCode; });
@@ -1907,6 +1972,24 @@ document.getElementById("itemSaveBtn").addEventListener("click", async function(
   } else {
     STATE.items.push({ code:code, name:name, category:category, unit:unit, cost:cost });
     logActivity("item_add", tf("log_item_added", code));
+    // Optional starting quantity, recorded as one clean movement — same blank-receipt convention
+    // as any other quick adjustment, so it doesn't need a real receipt number to make sense.
+    var openingQtyRaw = document.getElementById("itemOpeningQty").value;
+    var openingQty = openingQtyRaw==="" ? 0 : Number(openingQtyRaw);
+    if(openingQty && openingQty !== 0){
+      var openFormNo = "NO-RECEIPT-" + code + "-" + Date.now();
+      var openActionId = "ACT-" + Date.now();
+      var openLine = { itemId:code, code:code, name:name, unit:unit, qty:Math.abs(openingQty), unitPrice:cost,
+        isReturn:false, note:"", actionId:openActionId };
+      var openTx = { id:"TX-"+Date.now(), formNo:openFormNo, date:todayISO(), type:(openingQty>0?"IN":"OUT"),
+        partyType:"project", inSubType:(openingQty>0?"normal":null), partyName:"",
+        recipientName:"", notes:"", lines:[openLine], createdAt:Date.now() };
+      STATE.tx.push(openTx);
+      STATE.actions.push({ id:openActionId, formNo:openFormNo, date:openTx.date, type:openTx.type, partyType:"project",
+        partyName:"", recipientName:"", notes:"", lines:[openLine], createdAt:openTx.createdAt });
+      saveTx().catch(function(e){ console.error("Background save failed:", e); });
+      saveActions().catch(function(e){ console.error("Background save failed:", e); });
+    }
   }
   document.getElementById("itemModalBackdrop").classList.remove("show");
   renderItems();
@@ -3132,7 +3215,7 @@ function openItemCard(code){
   currentItemCardCode = code;
   document.getElementById("itemCardWrap").style.direction = (LANG === "ar") ? "rtl" : "ltr";
   var canEdit = hasPermission("editItems");
-  var canDeleteRow = hasPermission("adjustStock");
+  var canDeleteRow = hasPermission("deleteCardRows");
 
   var rows = [];
   STATE.tx.forEach(function(tx){
@@ -3219,10 +3302,7 @@ function openItemCard(code){
       '<div class="rc-ar-name">ساين تك<br><span style="font-weight:400;font-size:11px;">للتوريدات الهندسية والتجارة</span></div>'+
     '</div>'+
     '<div class="rc-meta"><div>Code / الكود: <b class="mono">'+esc(item.code)+'</b></div><div>'+t("card_current_balance")+': <b>'+balance+' '+esc(item.unit)+'</b></div></div>'+
-    '<div class="rc-party" style="font-size:15px; font-weight:700; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">'+
-      '<span>'+esc(item.name)+'</span>'+
-      (hasPermission("adjustStock") ? '<button class="btn ghost sm no-print" id="btnZeroStock" style="color:var(--out); border-color:var(--out); font-weight:400;">'+t("btn_mark_out_of_stock")+'</button>' : '')+
-    '</div>'+
+    '<div class="rc-party" style="font-size:15px; font-weight:700;">'+esc(item.name)+'</div>'+
     (canEdit ? '<div class="no-print" style="font-size:11.5px; color:var(--muted); margin-bottom:8px;">'+t("itemcard_edit_hint")+'</div>' : '')+
     '<table class="rc-table"><thead><tr>'+
       '<th rowspan="2">'+t("th_card_no")+'</th>'+
@@ -3244,8 +3324,6 @@ function openItemCard(code){
   document.getElementById("itemCardPaper").innerHTML = html;
   document.getElementById("itemCardOverlay").classList.add("show");
   if(canEdit) wireItemCardCells();
-  var zeroBtn = document.getElementById("btnZeroStock");
-  if(zeroBtn) zeroBtn.addEventListener("click", function(){ zeroOutItemStock(code); });
   if(canDeleteRow){
     document.getElementById("itemCardPaper").querySelectorAll("[data-delrow]").forEach(function(btn){
       btn.addEventListener("click", function(){
@@ -3258,36 +3336,8 @@ function openItemCard(code){
 // Brings an item's stock exactly to zero by recording a single adjustment movement for the
 // difference — never edits or deletes existing history, just adds one more honest entry to it,
 // the same way a real stock take/write-off would be recorded on paper.
-async function zeroOutItemStock(code){
-  if(!requirePermission("adjustStock")) return;
-  var item = STATE.items.find(function(i){ return i.code===code; });
-  if(!item) return;
-  var current = stockOf(code);
-  if(current === 0){ toast(t("t_already_zero")); return; }
-
-  var qty = Math.abs(current);
-  var type = current > 0 ? "OUT" : "IN";
-  var formNo = "NO-RECEIPT-" + code + "-" + Date.now(); // same placeholder convention as any
-    // other unreceipted movement — blank receipt no., excluded from Supplier/Project reports
-  var actionId = "ACT-" + Date.now();
-  var line = { itemId:code, code:code, name:item.name, unit:item.unit, qty:qty, unitPrice:null,
-    isReturn:false, note:"", actionId:actionId };
-  var tx = { id:"TX-"+Date.now(), formNo:formNo, date:todayISO(), type:type, partyType:"project",
-    inSubType:(type==="IN") ? "normal" : null, partyName:"",
-    recipientName:"", notes:"", lines:[line], createdAt:Date.now() };
-  STATE.tx.push(tx);
-  STATE.actions.push({ id:actionId, formNo:formNo, date:tx.date, type:type, partyType:"project",
-    partyName:"", recipientName:"", notes:"", lines:[line], createdAt:tx.createdAt });
-
-  logActivity("stock_adjust", tf("log_stock_zeroed", code, current));
-  refreshItemCardIfOpen();
-  toast(t("t_stock_zeroed"));
-  Promise.all([saveTx(), saveActions()]).catch(function(e){ console.error("Background save failed:", e); });
-}
-// Removes one movement entirely from an item's history — uses the same permission as zeroing
-// stock, since both are the same kind of "correct a mistake directly" action.
 async function deleteItemCardRow(txId, lineIndex){
-  if(!requirePermission("adjustStock")) return;
+  if(!requirePermission("deleteCardRows")) return;
   var tx = STATE.tx.find(function(x){ return x.id===txId; });
   if(!tx) return;
   var line = tx.lines[lineIndex];
@@ -3339,7 +3389,13 @@ function itemCardIsOpen(){
   var overlay = document.getElementById("itemCardOverlay");
   return !!(overlay && overlay.classList.contains("show"));
 }
-function refreshItemCardIfOpen(){ if(itemCardIsOpen()) openItemCard(currentItemCardCode); }
+function refreshItemCardIfOpen(){
+  if(itemCardIsOpen()) openItemCard(currentItemCardCode);
+  // Whatever tab is open behind the card (Items, Dashboard, Reports…) reads stock/value straight
+  // from STATE, so it needs a fresh render too — otherwise it keeps showing the old numbers until
+  // the person manually switches tabs or reloads.
+  rerenderCurrentView();
+}
 
 async function commitLineFormNo(txId, lineIndex, newFormNo){
   if(!requirePermission("editItems")){ refreshItemCardIfOpen(); return; }
@@ -3488,7 +3544,7 @@ var PERMISSIONS = [
   { key:"editReceipts", label:"perm_edit_receipts" },
   { key:"verifyReceipts", label:"perm_verify_receipts" },
   { key:"deleteReceipts", label:"perm_delete_receipts" },
-  { key:"adjustStock", label:"perm_adjust_stock" },
+  { key:"deleteCardRows", label:"perm_delete_card_rows" },
   { key:"viewReports", label:"perm_view_reports" },
   { key:"reclassifyReports", label:"perm_reclassify_reports" },
   { key:"viewHistory", label:"perm_view_history" },
@@ -3554,7 +3610,7 @@ function populateSigninUserList(){
   var sel = document.getElementById("signinUser");
   sel.innerHTML = STATE.users.map(function(u){ return '<option value="'+esc(u.id)+'">'+esc(u.name)+'</option>'; }).join("");
 }
-document.getElementById("btnSignIn").addEventListener("click", function(){
+function attemptSignIn(){
   var uid = document.getElementById("signinUser").value;
   var pin = document.getElementById("signinPin").value.trim();
   var user = STATE.users.find(function(u){ return u.id===uid; });
@@ -3565,9 +3621,18 @@ document.getElementById("btnSignIn").addEventListener("click", function(){
   errEl.textContent = "";
   document.getElementById("signinPin").value = "";
   document.getElementById("lockOverlay").classList.remove("show");
+  if(user.defaultLanguage && user.defaultLanguage !== LANG){
+    LANG = user.defaultLanguage;
+    storageSet(K_LANG, LANG, false).catch(function(e){ console.error("Background save failed:", e); });
+    applyI18n();
+  }
   applyPermissionUI();
   rerenderCurrentView();
   logActivity("signin", t("log_signed_in"));
+}
+document.getElementById("btnSignIn").addEventListener("click", attemptSignIn);
+document.getElementById("signinPin").addEventListener("keydown", function(e){
+  if(e.key === "Enter") attemptSignIn();
 });
 document.getElementById("btnSignOut").addEventListener("click", function(){
   if(currentUser) logActivity("signout", t("log_signed_out"));
@@ -3671,6 +3736,7 @@ function openUserModal(userId){
   document.getElementById("userEditId").value = editing ? userId : "";
   document.getElementById("userName").value = editing ? user.name : "";
   document.getElementById("userPin").value = editing ? user.pin : "";
+  document.getElementById("userDefaultLang").value = editing && user.defaultLanguage ? user.defaultLanguage : LANG;
   document.getElementById("userDeleteBtn").style.display = editing ? "" : "none";
   renderPermissionsGrid(editing ? user.permissions : {});
   document.getElementById("userModalBackdrop").classList.add("show");
@@ -3686,6 +3752,7 @@ document.getElementById("userSaveBtn").addEventListener("click", async function(
   var editId = document.getElementById("userEditId").value;
   var name = document.getElementById("userName").value.trim();
   var pin = document.getElementById("userPin").value.trim();
+  var defaultLanguage = document.getElementById("userDefaultLang").value;
   if(!name){ toast(t("t_user_name_required")); return; }
   if(!/^\d{4}$/.test(pin)){ toast(t("t_pin_format")); return; }
   var perms = {};
@@ -3694,10 +3761,10 @@ document.getElementById("userSaveBtn").addEventListener("click", async function(
   });
   if(editId){
     var u = STATE.users.find(function(x){ return x.id===editId; });
-    u.name = name; u.pin = pin; u.permissions = perms;
+    u.name = name; u.pin = pin; u.permissions = perms; u.defaultLanguage = defaultLanguage;
     logActivity("user_edit", tf("log_user_edited", name));
   } else {
-    STATE.users.push({ id:"USR-"+Date.now(), name:name, pin:pin, permissions:perms, createdAt:Date.now() });
+    STATE.users.push({ id:"USR-"+Date.now(), name:name, pin:pin, permissions:perms, defaultLanguage:defaultLanguage, createdAt:Date.now() });
     logActivity("user_add", tf("log_user_added", name));
   }
   document.getElementById("userModalBackdrop").classList.remove("show");
