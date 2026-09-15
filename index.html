@@ -102,7 +102,7 @@
   button.btn.copper{ background:var(--copper); }
   button.btn.copper:hover{ background:var(--copper-dark); }
   button.btn.ghost{ background:transparent; color:var(--navy); border:1px solid var(--border); }
-  button.report-tab.active, button.settings-tab.active, button.party-kind-tab.active, button.receipts-kind-tab.active{ background:var(--navy); color:#fff; border-color:var(--navy); }
+  button.report-tab.active, button.settings-tab.active, button.party-kind-tab.active, button.receipts-kind-tab.active, button.history-kind-tab.active{ background:var(--navy); color:#fff; border-color:var(--navy); }
   button.btn.ghost:hover{ background:#EEF1F4; }
   button.btn.danger{ background:#fff; color:var(--out); border:1px solid #F1C7C7; }
   button.btn.danger:hover{ background:#FBE5E5; }
@@ -285,7 +285,7 @@
       <div data-i18n="sidebar_note">Everyone who opens this link shares this data.<br>Sintech For Engineering Supplies &amp; Trade</div>
       <button class="btn ghost sm" id="btnLoadFile" style="margin-top:10px; width:100%; color:#fff; border-color:rgba(255,255,255,.3);" data-i18n="btn_load">📂 Load data file</button>
       <input type="file" id="loadFileInput" accept=".html,.json" style="display:none;">
-      <div style="margin-top:10px; font-size:10px; color:rgba(255,255,255,.45); text-align:center;">Build 2026-09-15 20:30 UTC</div>
+      <div style="margin-top:10px; font-size:10px; color:rgba(255,255,255,.45); text-align:center;">Build 2026-09-15 20:42 UTC</div>
     </div>
   </div>
 
@@ -504,25 +504,31 @@
       <h1 data-i18n="history_title">History</h1>
       <p class="subtitle" data-i18n="history_subtitle">Every receipt recorded</p>
       <div class="toolbar">
-        <input class="search" id="historySearch" data-i18n-ph="search_history_ph" placeholder="Search by form number or party name...">
+        <button class="btn ghost sm history-kind-tab active" data-historykind="items" data-i18n="history_tab_items">Items</button>
+        <button class="btn ghost sm history-kind-tab" data-historykind="newreceipt" data-i18n="history_tab_newreceipt">New Receipt</button>
+        <button class="btn ghost sm history-kind-tab" data-historykind="receipthistory" data-i18n="history_tab_receipthistory">Receipt History</button>
+        <button class="btn ghost sm history-kind-tab" data-historykind="recyclebin" data-i18n="recycle_bin_title">Recycle Bin</button>
       </div>
-      <div class="panel" style="padding:0;">
-        <table>
-          <thead><tr>
-            <th data-i18n="th_formno">Form No.</th><th data-i18n="th_date">Date</th><th data-i18n="th_type">Type</th><th data-i18n="th_party">Party</th><th data-i18n="th_items">Items</th><th data-i18n="th_total">Total</th><th></th>
-          </tr></thead>
-          <tbody id="historyBody"></tbody>
-        </table>
+      <div class="toolbar">
+        <input class="search" id="historySearch" data-i18n-ph="search_history_ph" placeholder="Search by form number, item code or user...">
+      </div>
+      <div id="historyLiveSection">
+        <div class="panel" style="padding:0;">
+          <table>
+            <thead><tr id="historyTableHead">
+              <th data-i18n="th_date">Date</th><th data-i18n="th_type">Type</th><th data-i18n="th_history_user">User</th><th></th>
+            </tr></thead>
+            <tbody id="historyBody"></tbody>
+          </table>
+        </div>
       </div>
 
       <div id="recycleBinSection" style="display:none;">
-        <h2 style="font-size:16px; margin:22px 0 10px; color:var(--navy-dark);" data-i18n="recycle_bin_title">Recycle Bin</h2>
-        <p class="subtitle" data-i18n="recycle_bin_subtitle" style="margin-top:-8px;">Anything deleted from History lands here first, so an accidental delete can be undone.</p>
+        <p class="subtitle" data-i18n="recycle_bin_subtitle" style="margin-top:-8px;">Anything cleared or undone from the three History tabs lands here — nothing about the real item or receipt data is affected by clearing, this is just a tidied-away copy of the history record itself.</p>
         <div class="panel" style="padding:0;">
           <table>
             <thead><tr>
-              <th data-i18n="th_formno">Form No.</th><th data-i18n="th_party">Party</th><th data-i18n="th_items">Items</th>
-              <th data-i18n="th_activity_when">When</th><th data-i18n="th_deleted_by">Deleted By</th><th></th>
+              <th data-i18n="th_recyclebin_what">What</th><th data-i18n="th_activity_when">When</th><th data-i18n="th_deleted_by">Cleared By</th><th></th>
             </tr></thead>
             <tbody id="recycleBinBody"></tbody>
           </table>
@@ -860,8 +866,10 @@ var K_CATEGORYMAP = "sintech_inv_categorymap_v1";
 var K_CUSTOMUNITS = "sintech_inv_customunits_v1";
 var K_UNITS = "sintech_inv_units_v1";
 var K_PARTYDIR = "sintech_inv_partydir_v1";
+var K_ITEMHIST = "sintech_inv_itemhistory_v1";
+var K_RCEDITHIST = "sintech_inv_receipteditlog_v1";
 
-var STATE = { items: [], tx: [], actions: [], users: [], activityLog: [], recycleBin: [], categoryMap: null, customUnits: [], units: null, partyDirectory: null, meta: { formCounter: 5872, categories: [], locked:false }, loaded:false };
+var STATE = { items: [], tx: [], actions: [], users: [], activityLog: [], recycleBin: [], categoryMap: null, customUnits: [], units: null, partyDirectory: null, itemHistory: [], receiptEditHistory: [], meta: { formCounter: 5872, categories: [], locked:false }, loaded:false };
 var LANG = "en";
 var currentItemCardCode = null;
 var currentUser = null; // session-only — never persisted, so locking always requires signing in again
@@ -957,7 +965,9 @@ var FS_DOCS = [
   { id:"categoryMap", key:K_CATEGORYMAP, apply:function(v){ STATE.categoryMap = (v && Object.keys(v).length) ? v : DEFAULT_CATEGORY_MAP; } },
   { id:"customUnits", key:K_CUSTOMUNITS, apply:function(v){ STATE.customUnits = v || []; } },
   { id:"units", key:K_UNITS, apply:function(v){ STATE.units = (v && v.length) ? v : seedUnitsWithLegacyCustom(); } },
-  { id:"partyDirectory", key:K_PARTYDIR, apply:function(v){ STATE.partyDirectory = (v && v.length) ? v : buildInitialPartyDirectory(); } }
+  { id:"partyDirectory", key:K_PARTYDIR, apply:function(v){ STATE.partyDirectory = (v && v.length) ? v : buildInitialPartyDirectory(); } },
+  { id:"itemHistory", key:K_ITEMHIST, apply:function(v){ STATE.itemHistory = v || []; } },
+  { id:"receiptEditHistory", key:K_RCEDITHIST, apply:function(v){ STATE.receiptEditHistory = v || []; } }
 ];
 
 // One-time on boot: if Firestore already has data, it wins (it's the shared source of truth).
@@ -1214,7 +1224,14 @@ var I18N = {
     log_item_added:"Added item %s", log_item_edited:"Edited item %s", log_item_deleted:"Deleted item %s",
     log_receipt_added:"Created receipt %s", log_receipt_appended:"Added items to receipt %s", log_receipt_edited:"Edited receipt %s",
     log_receipt_verified:"Marked receipt %s as verified", log_receipt_unverified:"Unmarked receipt %s as verified",
-    log_history_deleted:"Deleted history entry for receipt %s", log_saved_file:"Saved a data file"
+    log_history_deleted:"Deleted history entry for receipt %s", log_saved_file:"Saved a data file",
+    history_tab_items:"Items", history_tab_newreceipt:"New Receipt", history_tab_receipthistory:"Receipt History",
+    th_history_user:"User", th_recyclebin_what:"What",
+    htype_item_added:"Item Added", htype_item_edited:"Item Edited", htype_receipt_created:"Receipt Created", htype_receipt_edited:"Receipt Edited",
+    btn_undo:"Undo", btn_clear:"Clear",
+    t_confirm_undo:"Undo this? It will revert to the state it was in before this change.", t_undone:"Undone",
+    log_history_undone:"Undid a history entry for %s", log_history_cleared:"Cleared a history entry for %s (moved to Recycle Bin)",
+    recycle_what_receipt:"Whole receipt %s", recycle_what_item:"Item history — %s", recycle_what_receiptedit:"Receipt edit — %s", recycle_what_newreceipt:"New receipt entry — %s"
   },
   ar: {
     brand_tagline: "جرد المخزون وإذونات التسليم",
@@ -1416,7 +1433,14 @@ var I18N = {
     log_item_added:"تمت إضافة الصنف %s", log_item_edited:"تم تعديل الصنف %s", log_item_deleted:"تم حذف الصنف %s",
     log_receipt_added:"تم إنشاء الإذن %s", log_receipt_appended:"تمت إضافة أصناف للإذن %s", log_receipt_edited:"تم تعديل الإذن %s",
     log_receipt_verified:"تم تحديد الإذن %s كمطابَق", log_receipt_unverified:"تم إلغاء مطابقة الإذن %s",
-    log_history_deleted:"تم حذف عنصر السجل الخاص بالإذن %s", log_saved_file:"تم حفظ ملف بيانات"
+    log_history_deleted:"تم حذف عنصر السجل الخاص بالإذن %s", log_saved_file:"تم حفظ ملف بيانات",
+    history_tab_items:"الأصناف", history_tab_newreceipt:"إذن جديد", history_tab_receipthistory:"سجل الإذونات",
+    th_history_user:"المستخدم", th_recyclebin_what:"العنصر",
+    htype_item_added:"تمت إضافة صنف", htype_item_edited:"تم تعديل صنف", htype_receipt_created:"تم إنشاء إذن", htype_receipt_edited:"تم تعديل إذن",
+    btn_undo:"تراجع", btn_clear:"مسح",
+    t_confirm_undo:"تراجع عن هذا؟ سيعود إلى الحالة التي كان عليها قبل هذا التغيير.", t_undone:"تم التراجع",
+    log_history_undone:"تم التراجع عن عنصر سجل خاص بـ %s", log_history_cleared:"تم مسح عنصر سجل خاص بـ %s (نُقل إلى سلة المحذوفات)",
+    recycle_what_receipt:"إذن كامل %s", recycle_what_item:"سجل صنف — %s", recycle_what_receiptedit:"تعديل إذن — %s", recycle_what_newreceipt:"إذن جديد — %s"
   },
   tr: {
     brand_tagline: "Stok ve Teslim Formları",
@@ -1618,7 +1642,14 @@ var I18N = {
     log_item_added:"%s ürünü eklendi", log_item_edited:"%s ürünü düzenlendi", log_item_deleted:"%s ürünü silindi",
     log_receipt_added:"%s fişi oluşturuldu", log_receipt_appended:"%s fişine ürün eklendi", log_receipt_edited:"%s fişi düzenlendi",
     log_receipt_verified:"%s fişi doğrulandı olarak işaretlendi", log_receipt_unverified:"%s fişinin doğrulaması kaldırıldı",
-    log_history_deleted:"%s fişine ait geçmiş kaydı silindi", log_saved_file:"Bir veri dosyası kaydedildi"
+    log_history_deleted:"%s fişine ait geçmiş kaydı silindi", log_saved_file:"Bir veri dosyası kaydedildi",
+    history_tab_items:"Ürünler", history_tab_newreceipt:"Yeni Fiş", history_tab_receipthistory:"Fiş Geçmişi",
+    th_history_user:"Kullanıcı", th_recyclebin_what:"Ne",
+    htype_item_added:"Ürün Eklendi", htype_item_edited:"Ürün Düzenlendi", htype_receipt_created:"Fiş Oluşturuldu", htype_receipt_edited:"Fiş Düzenlendi",
+    btn_undo:"Geri Al", btn_clear:"Temizle",
+    t_confirm_undo:"Bu geri alınsın mı? Bu değişiklikten önceki haline dönecek.", t_undone:"Geri alındı",
+    log_history_undone:"%s için bir geçmiş kaydı geri alındı", log_history_cleared:"%s için bir geçmiş kaydı temizlendi (Geri Dönüşüm Kutusuna taşındı)",
+    recycle_what_receipt:"Tüm fiş %s", recycle_what_item:"Ürün geçmişi — %s", recycle_what_receiptedit:"Fiş düzenlemesi — %s", recycle_what_newreceipt:"Yeni fiş kaydı — %s"
   }
 };
 function t(key){
@@ -1706,6 +1737,8 @@ async function saveCategoryMap(){ await storageSet(K_CATEGORYMAP, JSON.stringify
 async function saveCustomUnits(){ await storageSet(K_CUSTOMUNITS, JSON.stringify(STATE.customUnits), true); }
 async function saveUnits(){ await storageSet(K_UNITS, JSON.stringify(STATE.units), true); }
 async function savePartyDirectory(){ await storageSet(K_PARTYDIR, JSON.stringify(STATE.partyDirectory), true); }
+async function saveItemHistory(){ await storageSet(K_ITEMHIST, JSON.stringify(STATE.itemHistory), true); }
+async function saveReceiptEditHistory(){ await storageSet(K_RCEDITHIST, JSON.stringify(STATE.receiptEditHistory), true); }
 
 function todayISO(){
   var d = new Date();
@@ -1727,10 +1760,12 @@ async function loadAll(){
     STATE.customUnits = SAVED_STATE_OVERRIDE.customUnits || [];
     STATE.units = (SAVED_STATE_OVERRIDE.units && SAVED_STATE_OVERRIDE.units.length) ? SAVED_STATE_OVERRIDE.units : seedUnitsWithLegacyCustom();
     STATE.partyDirectory = (SAVED_STATE_OVERRIDE.partyDirectory && SAVED_STATE_OVERRIDE.partyDirectory.length) ? SAVED_STATE_OVERRIDE.partyDirectory : buildInitialPartyDirectory();
+    STATE.itemHistory = SAVED_STATE_OVERRIDE.itemHistory || [];
+    STATE.receiptEditHistory = SAVED_STATE_OVERRIDE.receiptEditHistory || [];
     STATE.meta = SAVED_STATE_OVERRIDE.meta || { formCounter:5872, categories:[], locked:false };
     if(typeof STATE.meta.locked !== "boolean") STATE.meta.locked = false;
     STATE.tx.forEach(function(tx){ if(tx.verified===undefined) tx.verified = false; });
-    await Promise.all([saveItems(), saveTx(), saveActions(), saveMeta(), saveUsers(), saveActivityLog(), saveRecycleBin(), saveCategoryMap(), saveCustomUnits(), saveUnits(), savePartyDirectory()]);
+    await Promise.all([saveItems(), saveTx(), saveActions(), saveMeta(), saveUsers(), saveActivityLog(), saveRecycleBin(), saveCategoryMap(), saveCustomUnits(), saveUnits(), savePartyDirectory(), saveItemHistory(), saveReceiptEditHistory()]);
     STATE.loaded = true;
     return;
   }
@@ -1849,6 +1884,10 @@ async function loadAll(){
     var parsedPartyDir = rawPartyDir ? JSON.parse(rawPartyDir) : null;
     STATE.partyDirectory = (parsedPartyDir && parsedPartyDir.length) ? parsedPartyDir : buildInitialPartyDirectory();
   }catch(e){ STATE.partyDirectory = buildInitialPartyDirectory(); }
+  var rawItemHist = await storageGet(K_ITEMHIST, true);
+  try{ STATE.itemHistory = rawItemHist ? (JSON.parse(rawItemHist) || []) : []; }catch(e){ STATE.itemHistory = []; }
+  var rawRcEditHist = await storageGet(K_RCEDITHIST, true);
+  try{ STATE.receiptEditHistory = rawRcEditHist ? (JSON.parse(rawRcEditHist) || []) : []; }catch(e){ STATE.receiptEditHistory = []; }
   if(typeof STATE.meta.locked !== "boolean") STATE.meta.locked = false;
 
   STATE.loaded = true;
@@ -2263,10 +2302,13 @@ document.getElementById("itemSaveBtn").addEventListener("click", async function(
 
   if(origCode){
     var it = STATE.items.find(function(i){ return i.code===origCode; });
+    var beforeSnap = { code:it.code, name:it.name, category:it.category, unit:it.unit, cost:it.cost };
     it.name=name; it.category=category; it.unit=unit; it.cost=cost;
+    pushItemHistory("edit", code, beforeSnap, { code:it.code, name:it.name, category:it.category, unit:it.unit, cost:it.cost });
     logActivity("item_edit", tf("log_item_edited", code));
   } else {
     STATE.items.push({ code:code, name:name, category:category, unit:unit, cost:cost });
+    pushItemHistory("add", code, null, { code:code, name:name, category:category, unit:unit, cost:cost });
     logActivity("item_add", tf("log_item_added", code));
     // Optional starting quantity, recorded as one clean movement — same blank-receipt convention
     // as any other quick adjustment, so it doesn't need a real receipt number to make sense.
@@ -2282,7 +2324,8 @@ document.getElementById("itemSaveBtn").addEventListener("click", async function(
         recipientName:"", notes:"", lines:[openLine], createdAt:Date.now() };
       STATE.tx.push(openTx);
       STATE.actions.push({ id:openActionId, formNo:openFormNo, date:openTx.date, type:openTx.type, partyType:"project",
-        partyName:"", recipientName:"", notes:"", lines:[openLine], createdAt:openTx.createdAt });
+        partyName:"", recipientName:"", notes:"", lines:[openLine], createdAt:openTx.createdAt,
+        createdByName: currentUser ? currentUser.name : t("system_user_label") });
       saveTx().catch(function(e){ console.error("Background save failed:", e); });
       saveActions().catch(function(e){ console.error("Background save failed:", e); });
     }
@@ -2291,6 +2334,7 @@ document.getElementById("itemSaveBtn").addEventListener("click", async function(
   renderItems();
   toast(t("t_saved"));
   saveItems().catch(function(e){ console.error("Background save failed:", e); });
+  saveItemHistory().catch(function(e){ console.error("Background save failed:", e); });
 });
 
 // ---------------- NEW TRANSACTION VIEW ----------------
@@ -2558,7 +2602,8 @@ document.getElementById("btnSaveTx").addEventListener("click", async function(){
   var actionId = "ACT-" + Date.now();
   var actionLines = lines.map(function(l){ return Object.assign({}, l, {actionId: actionId}); });
   var action = { id:actionId, formNo:formNo, date:date||todayISO(), type:type, partyType:partyType, inSubType:inSubType,
-    supplierRefNo:supplierRefNo, supplierInvoiceNo:supplierInvoiceNo, partyName:partyName, recipientName:recipient, notes:notes, lines:actionLines, createdAt:Date.now() };
+    supplierRefNo:supplierRefNo, supplierInvoiceNo:supplierInvoiceNo, partyName:partyName, recipientName:recipient, notes:notes, lines:actionLines, createdAt:Date.now(),
+    createdByName: currentUser ? currentUser.name : t("system_user_label") };
   STATE.actions.push(action);
 
   var existing = STATE.tx.find(function(x){ return String(x.formNo).trim()===formNo && x.type===type; });
@@ -2848,6 +2893,9 @@ document.getElementById("editReceiptSaveBtn").addEventListener("click", async fu
   }
   if(newLines.length===0){ toast(t("t_add_one_line")); return; }
 
+  var beforeSnap = { type:tx.type, partyType:tx.partyType, inSubType:tx.inSubType, partyName:tx.partyName,
+    supplierRefNo:tx.supplierRefNo, supplierInvoiceNo:tx.supplierInvoiceNo, date:tx.date,
+    recipientName:tx.recipientName, notes:tx.notes, lines: JSON.parse(JSON.stringify(tx.lines)) };
   tx.type = type;
   tx.partyType = partyType;
   tx.inSubType = inSubType;
@@ -2858,11 +2906,13 @@ document.getElementById("editReceiptSaveBtn").addEventListener("click", async fu
   tx.date = date || tx.date;
   tx.notes = notes;
   tx.lines = newLines;
+  pushReceiptEditHistory(tx, beforeSnap);
   logActivity("receipt_edit", tf("log_receipt_edited", tx.formNo));
   document.getElementById("editReceiptModalBackdrop").classList.remove("show");
   renderReceiptsTab();
   toast(t("t_receipt_updated"));
   saveTx().catch(function(e){ console.error("Background save failed:", e); });
+  saveReceiptEditHistory().catch(function(e){ console.error("Background save failed:", e); });
 });
 
 // ---------------- SAVE / LOAD DATA FILE (saves as a real, self-contained HTML app) ----------------
@@ -2872,7 +2922,7 @@ document.getElementById("btnBackup").addEventListener("click", function(){
   document.getElementById("itemModalBackdrop").classList.remove("show");
   document.getElementById("receiptOverlay").classList.remove("show");
 
-  var snapshot = { items: STATE.items, transactions: STATE.tx, actions: STATE.actions, users: STATE.users, activityLog: STATE.activityLog, recycleBin: STATE.recycleBin, categoryMap: STATE.categoryMap, customUnits: STATE.customUnits, units: STATE.units, partyDirectory: STATE.partyDirectory, meta: STATE.meta };
+  var snapshot = { items: STATE.items, transactions: STATE.tx, actions: STATE.actions, users: STATE.users, activityLog: STATE.activityLog, recycleBin: STATE.recycleBin, categoryMap: STATE.categoryMap, customUnits: STATE.customUnits, units: STATE.units, partyDirectory: STATE.partyDirectory, itemHistory: STATE.itemHistory, receiptEditHistory: STATE.receiptEditHistory, meta: STATE.meta };
   var fullHtml = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
   fullHtml = fullHtml.replace(
     "var SAVED_STATE_OVERRIDE = null;",
@@ -2928,7 +2978,9 @@ document.getElementById("loadFileInput").addEventListener("change", function(e){
       STATE.customUnits = Array.isArray(payload.customUnits) ? payload.customUnits : STATE.customUnits;
       STATE.units = (Array.isArray(payload.units) && payload.units.length) ? payload.units : STATE.units;
       STATE.partyDirectory = (Array.isArray(payload.partyDirectory) && payload.partyDirectory.length) ? payload.partyDirectory : STATE.partyDirectory;
-      await Promise.all([saveItems(), saveTx(), saveActions(), saveMeta(), saveUsers(), saveActivityLog(), saveRecycleBin(), saveCategoryMap(), saveCustomUnits(), saveUnits(), savePartyDirectory()]);
+      STATE.itemHistory = Array.isArray(payload.itemHistory) ? payload.itemHistory : STATE.itemHistory;
+      STATE.receiptEditHistory = Array.isArray(payload.receiptEditHistory) ? payload.receiptEditHistory : STATE.receiptEditHistory;
+      await Promise.all([saveItems(), saveTx(), saveActions(), saveMeta(), saveUsers(), saveActivityLog(), saveRecycleBin(), saveCategoryMap(), saveCustomUnits(), saveUnits(), savePartyDirectory(), saveItemHistory(), saveReceiptEditHistory()]);
       rerenderCurrentView();
       toast(t("t_loaded"));
     }catch(err){
@@ -3403,7 +3455,17 @@ document.getElementById("btnCloseReportDetail").addEventListener("click", functi
 });
 document.getElementById("btnPrintReportDetail").addEventListener("click", function(){ window.print(); });
 
-// ---------------- HISTORY VIEW (every save, kept separate — not merged like the Receipts book) ----------------
+// ---------------- HISTORY VIEW (4 tabs: Items / New Receipt / Receipt History / Recycle Bin) ----------------
+var currentHistoryKind = "items";
+document.querySelectorAll(".history-kind-tab").forEach(function(btn){
+  btn.addEventListener("click", function(){
+    currentHistoryKind = btn.dataset.historykind;
+    document.querySelectorAll(".history-kind-tab").forEach(function(b){ b.classList.toggle("active", b===btn); });
+    document.getElementById("historyLiveSection").style.display = (currentHistoryKind==="recyclebin") ? "none" : "";
+    document.getElementById("recycleBinSection").style.display = (currentHistoryKind==="recyclebin") ? "" : "none";
+    renderHistory();
+  });
+});
 // Wrapped in try/catch so one malformed record can never leave the whole tab blank — it shows
 // a clear, diagnosable message instead, and logs the real error to the console.
 function renderHistory(){
@@ -3411,71 +3473,177 @@ function renderHistory(){
   catch(e){
     console.error("renderHistory failed:", e);
     var body = document.getElementById("historyBody");
-    if(body) body.innerHTML = '<tr><td colspan="7"><div class="empty">'+t("t_render_error")+'</div></td></tr>';
+    if(body) body.innerHTML = '<tr><td colspan="4"><div class="empty">'+t("t_render_error")+'</div></td></tr>';
   }
 }
 function _renderHistoryImpl(){
-  var searchEl = document.getElementById("historySearch");
-  var q = (searchEl.value||"").trim().toLowerCase();
-  var list = STATE.actions.slice().sort(function(a,b){ return b.createdAt-a.createdAt; }).filter(function(a){
-    return !q || String(a.formNo).toLowerCase().indexOf(q)>=0 || String(a.partyName||"").toLowerCase().indexOf(q)>=0;
-  });
+  if(currentHistoryKind==="recyclebin"){ renderRecycleBin(); return; }
+  var q = (document.getElementById("historySearch").value||"").trim().toLowerCase();
   var body = document.getElementById("historyBody");
-  if(list.length===0){
-    body.innerHTML = '<tr><td colspan="7"><div class="empty">'+t("empty_no_items")+'</div></td></tr>';
-  } else {
-    body.innerHTML = list.map(function(a){
-      var lines = a.lines || [];
-      var total = lines.reduce(function(s,l){ return s + (l.unitPrice? l.qty*l.unitPrice : 0); }, 0);
-      var partyClass = a.partyType==="client" ? "party-client" : "party-project";
+  var canClear = hasPermission("deleteHistory");
+
+  if(currentHistoryKind==="items"){
+    var list = STATE.itemHistory.slice().sort(function(a,b){ return b.timestamp-a.timestamp; })
+      .filter(function(h){ return !q || h.itemCode.toLowerCase().indexOf(q)>=0 || (h.userName||"").toLowerCase().indexOf(q)>=0; });
+    if(list.length===0){ body.innerHTML = '<tr><td colspan="4"><div class="empty">'+t("empty_no_items")+'</div></td></tr>'; return; }
+    body.innerHTML = list.map(function(h){
+      var typeLabel = h.action==="add" ? t("htype_item_added") : t("htype_item_edited");
       return '<tr>'+
-        '<td class="mono">'+esc(a.formNo)+'</td>'+
-        '<td>'+esc(a.date)+'</td>'+
-        '<td><span class="pill '+partyClass+'">'+(a.type==="IN"?t("type_in"):t("type_out"))+'</span></td>'+
-        '<td>'+esc(a.partyName)+'</td>'+
-        '<td>'+lines.length+'</td>'+
-        '<td>'+(total? total.toFixed(2)+" EGP":"—")+'</td>'+
-        '<td><a class="link" data-openact="'+esc(a.formNo)+'" data-openact-type="'+esc(a.type)+'">'+t("link_open")+'</a> &nbsp; <a class="link" data-delact="'+esc(a.id)+'" style="color:var(--out);">'+t("link_delete")+'</a></td>'+
-        '</tr>';
+        '<td>'+esc(new Date(h.timestamp).toLocaleString())+'</td>'+
+        '<td>'+typeLabel+' <span class="mono" style="color:var(--muted);">('+esc(h.itemCode)+')</span></td>'+
+        '<td>'+esc(h.userName)+'</td>'+
+        '<td style="white-space:nowrap;">'+
+          '<a class="link" data-openitem="'+esc(h.itemCode)+'">'+t("link_open")+'</a> &nbsp; '+
+          '<a class="link" data-undoitem="'+esc(h.id)+'" style="color:var(--out);">'+t("btn_undo")+'</a>'+
+          (canClear ? ' &nbsp; <a class="link" data-clearitem="'+esc(h.id)+'">'+t("btn_clear")+'</a>' : '')+
+        '</td></tr>';
     }).join("");
+    body.querySelectorAll("[data-openitem]").forEach(function(el){ el.addEventListener("click", function(){ openItemCard(el.dataset.openitem); }); });
+    body.querySelectorAll("[data-undoitem]").forEach(function(el){ el.addEventListener("click", function(){ undoItemHistory(el.dataset.undoitem); }); });
+    body.querySelectorAll("[data-clearitem]").forEach(function(el){ el.addEventListener("click", function(){ clearItemHistory(el.dataset.clearitem); }); });
+
+  } else if(currentHistoryKind==="newreceipt"){
+    var list2 = STATE.actions.slice().sort(function(a,b){ return b.createdAt-a.createdAt; })
+      .filter(function(a){ return !q || String(a.formNo).toLowerCase().indexOf(q)>=0 || String(a.createdByName||"").toLowerCase().indexOf(q)>=0; });
+    if(list2.length===0){ body.innerHTML = '<tr><td colspan="4"><div class="empty">'+t("empty_no_items")+'</div></td></tr>'; return; }
+    var partyClassFor = function(a){ return a.partyType==="client" ? "party-client" : "party-project"; };
+    body.innerHTML = list2.map(function(a){
+      return '<tr>'+
+        '<td>'+esc(a.date)+'</td>'+
+        '<td>'+t("htype_receipt_created")+' <span class="pill '+partyClassFor(a)+'">'+(a.type==="IN"?t("type_in"):t("type_out"))+'</span> <span class="mono" style="color:var(--muted);">('+esc(a.formNo)+')</span></td>'+
+        '<td>'+esc(a.createdByName || t("system_user_label"))+'</td>'+
+        '<td style="white-space:nowrap;">'+
+          '<a class="link" data-openact="'+esc(a.formNo)+'" data-openact-type="'+esc(a.type)+'">'+t("link_open")+'</a> &nbsp; '+
+          '<a class="link" data-undoact="'+esc(a.id)+'" style="color:var(--out);">'+t("btn_undo")+'</a>'+
+          (canClear ? ' &nbsp; <a class="link" data-clearact="'+esc(a.id)+'">'+t("btn_clear")+'</a>' : '')+
+        '</td></tr>';
+    }).join("");
+    body.querySelectorAll("[data-openact]").forEach(function(el){
+      el.addEventListener("click", function(){
+        var tx = STATE.tx.find(function(x){ return String(x.formNo).trim()===String(el.dataset.openact).trim() && x.type===el.dataset.openactType; });
+        if(tx) openReceipt(tx.id);
+      });
+    });
+    body.querySelectorAll("[data-undoact]").forEach(function(el){ el.addEventListener("click", function(){ undoNewReceiptAction(el.dataset.undoact); }); });
+    body.querySelectorAll("[data-clearact]").forEach(function(el){ el.addEventListener("click", function(){ clearNewReceiptAction(el.dataset.clearact); }); });
+
+  } else if(currentHistoryKind==="receipthistory"){
+    var list3 = STATE.receiptEditHistory.slice().sort(function(a,b){ return b.timestamp-a.timestamp; })
+      .filter(function(h){ return !q || String(h.formNo).toLowerCase().indexOf(q)>=0 || (h.userName||"").toLowerCase().indexOf(q)>=0; });
+    if(list3.length===0){ body.innerHTML = '<tr><td colspan="4"><div class="empty">'+t("empty_no_items")+'</div></td></tr>'; return; }
+    body.innerHTML = list3.map(function(h){
+      return '<tr>'+
+        '<td>'+esc(new Date(h.timestamp).toLocaleString())+'</td>'+
+        '<td>'+t("htype_receipt_edited")+' <span class="mono" style="color:var(--muted);">('+esc(h.formNo)+')</span></td>'+
+        '<td>'+esc(h.userName)+'</td>'+
+        '<td style="white-space:nowrap;">'+
+          '<a class="link" data-openrceh="'+esc(h.txId)+'">'+t("link_open")+'</a> &nbsp; '+
+          '<a class="link" data-undorceh="'+esc(h.id)+'" style="color:var(--out);">'+t("btn_undo")+'</a>'+
+          (canClear ? ' &nbsp; <a class="link" data-clearrceh="'+esc(h.id)+'">'+t("btn_clear")+'</a>' : '')+
+        '</td></tr>';
+    }).join("");
+    body.querySelectorAll("[data-openrceh]").forEach(function(el){ el.addEventListener("click", function(){ openReceipt(el.dataset.openrceh); }); });
+    body.querySelectorAll("[data-undorceh]").forEach(function(el){ el.addEventListener("click", function(){ undoReceiptEditHistory(el.dataset.undorceh); }); });
+    body.querySelectorAll("[data-clearrceh]").forEach(function(el){ el.addEventListener("click", function(){ clearReceiptEditHistory(el.dataset.clearrceh); }); });
   }
-  body.querySelectorAll("[data-openact]").forEach(function(el){
-    el.addEventListener("click", function(){
-      var tx = STATE.tx.find(function(x){ return String(x.formNo).trim()===String(el.dataset.openact).trim() && x.type===el.dataset.openactType; });
-      if(tx) openReceipt(tx.id);
-    });
-  });
-  body.querySelectorAll("[data-delact]").forEach(function(el){
-    el.addEventListener("click", async function(){
-      if(!requirePermission("deleteHistory")) return;
-      if(!confirm(t("t_confirm_delete"))) return;
-      var actionId = el.dataset.delact;
-      var action = STATE.actions.find(function(a){ return a.id===actionId; });
-      STATE.actions = STATE.actions.filter(function(a){ return a.id!==actionId; });
-      if(action){
-        var tx = STATE.tx.find(function(x){ return String(x.formNo).trim()===String(action.formNo).trim() && x.type===action.type; });
-        if(tx){
-          tx.lines = tx.lines.filter(function(l){ return l.actionId!==actionId; });
-          if(tx.lines.length===0){ STATE.tx = STATE.tx.filter(function(x){ return x.id!==tx.id; }); }
-        }
-        STATE.recycleBin.push({
-          id: "RB-"+Date.now()+"-"+Math.random().toString(36).slice(2,7),
-          deletedAt: Date.now(),
-          deletedByName: currentUser ? currentUser.name : t("system_user_label"),
-          action: action
-        });
-      }
-      logActivity("history_delete", tf("log_history_deleted", action ? action.formNo : actionId));
-      renderHistory();
-      toast(t("t_moved_to_recycle_bin"));
-      Promise.all([saveActions(), saveTx(), saveRecycleBin()]).catch(function(e){ console.error("Background save failed:", e); });
-    });
-  });
-  renderRecycleBin();
 }
 document.getElementById("historySearch").addEventListener("input", renderHistory);
 
-// ---------------- RECYCLE BIN (undo an accidental History delete — gated by its own permission) ----------------
+// ---- Undo / Clear for Items ----
+async function undoItemHistory(id){
+  if(!requirePermission("deleteHistory")) return;
+  var h = STATE.itemHistory.find(function(x){ return x.id===id; });
+  if(!h) return;
+  if(!confirm(t("t_confirm_undo"))) return;
+  if(h.action==="add"){
+    STATE.items = STATE.items.filter(function(i){ return i.code!==h.itemCode; });
+  } else if(h.before){
+    var it = STATE.items.find(function(i){ return i.code===h.itemCode; });
+    if(it){ it.name=h.before.name; it.category=h.before.category; it.unit=h.before.unit; it.cost=h.before.cost; }
+  }
+  STATE.itemHistory = STATE.itemHistory.filter(function(x){ return x.id!==id; });
+  logActivity("history_undo", tf("log_history_undone", h.itemCode));
+  renderHistory(); renderItems();
+  toast(t("t_undone"));
+  Promise.all([saveItems(), saveItemHistory()]).catch(function(e){ console.error("Background save failed:", e); });
+}
+async function clearItemHistory(id){
+  if(!requirePermission("deleteHistory")) return;
+  var h = STATE.itemHistory.find(function(x){ return x.id===id; });
+  if(!h) return;
+  STATE.itemHistory = STATE.itemHistory.filter(function(x){ return x.id!==id; });
+  STATE.recycleBin.push({ id:"RB-"+Date.now()+"-"+Math.random().toString(36).slice(2,7), deletedAt:Date.now(),
+    deletedByName: currentUser ? currentUser.name : t("system_user_label"), itemHistoryEntry: h });
+  logActivity("history_clear", tf("log_history_cleared", h.itemCode));
+  renderHistory();
+  toast(t("t_moved_to_recycle_bin"));
+  Promise.all([saveItemHistory(), saveRecycleBin()]).catch(function(e){ console.error("Background save failed:", e); });
+}
+
+// ---- Undo / Clear for New Receipt (same mechanics as the old History delete) ----
+async function undoNewReceiptAction(actionId){
+  if(!requirePermission("deleteHistory")) return;
+  if(!confirm(t("t_confirm_undo"))) return;
+  var action = STATE.actions.find(function(a){ return a.id===actionId; });
+  STATE.actions = STATE.actions.filter(function(a){ return a.id!==actionId; });
+  if(action){
+    var tx = STATE.tx.find(function(x){ return String(x.formNo).trim()===String(action.formNo).trim() && x.type===action.type; });
+    if(tx){
+      tx.lines = tx.lines.filter(function(l){ return l.actionId!==actionId; });
+      if(tx.lines.length===0){ STATE.tx = STATE.tx.filter(function(x){ return x.id!==tx.id; }); }
+    }
+  }
+  logActivity("history_undo", tf("log_history_undone", action ? action.formNo : actionId));
+  renderHistory();
+  toast(t("t_undone"));
+  Promise.all([saveActions(), saveTx()]).catch(function(e){ console.error("Background save failed:", e); });
+}
+async function clearNewReceiptAction(actionId){
+  if(!requirePermission("deleteHistory")) return;
+  var action = STATE.actions.find(function(a){ return a.id===actionId; });
+  STATE.actions = STATE.actions.filter(function(a){ return a.id!==actionId; });
+  if(action){
+    STATE.recycleBin.push({ id:"RB-"+Date.now()+"-"+Math.random().toString(36).slice(2,7), deletedAt:Date.now(),
+      deletedByName: currentUser ? currentUser.name : t("system_user_label"), action: action });
+  }
+  logActivity("history_clear", tf("log_history_cleared", action ? action.formNo : actionId));
+  renderHistory();
+  toast(t("t_moved_to_recycle_bin"));
+  Promise.all([saveActions(), saveRecycleBin()]).catch(function(e){ console.error("Background save failed:", e); });
+}
+
+// ---- Undo / Clear for Receipt History (edits) ----
+async function undoReceiptEditHistory(id){
+  if(!requirePermission("deleteHistory")) return;
+  var h = STATE.receiptEditHistory.find(function(x){ return x.id===id; });
+  if(!h) return;
+  if(!confirm(t("t_confirm_undo"))) return;
+  var tx = STATE.tx.find(function(x){ return x.id===h.txId; });
+  if(tx && h.before){
+    tx.type=h.before.type; tx.partyType=h.before.partyType; tx.inSubType=h.before.inSubType; tx.partyName=h.before.partyName;
+    tx.supplierRefNo=h.before.supplierRefNo; tx.supplierInvoiceNo=h.before.supplierInvoiceNo; tx.date=h.before.date;
+    tx.recipientName=h.before.recipientName; tx.notes=h.before.notes; tx.lines=h.before.lines;
+  }
+  STATE.receiptEditHistory = STATE.receiptEditHistory.filter(function(x){ return x.id!==id; });
+  logActivity("history_undo", tf("log_history_undone", h.formNo));
+  renderHistory();
+  toast(t("t_undone"));
+  Promise.all([saveTx(), saveReceiptEditHistory()]).catch(function(e){ console.error("Background save failed:", e); });
+}
+async function clearReceiptEditHistory(id){
+  if(!requirePermission("deleteHistory")) return;
+  var h = STATE.receiptEditHistory.find(function(x){ return x.id===id; });
+  if(!h) return;
+  STATE.receiptEditHistory = STATE.receiptEditHistory.filter(function(x){ return x.id!==id; });
+  STATE.recycleBin.push({ id:"RB-"+Date.now()+"-"+Math.random().toString(36).slice(2,7), deletedAt:Date.now(),
+    deletedByName: currentUser ? currentUser.name : t("system_user_label"), receiptEditEntry: h });
+  logActivity("history_clear", tf("log_history_cleared", h.formNo));
+  renderHistory();
+  toast(t("t_moved_to_recycle_bin"));
+  Promise.all([saveReceiptEditHistory(), saveRecycleBin()]).catch(function(e){ console.error("Background save failed:", e); });
+}
+
+// ---------------- RECYCLE BIN (undo an accidental Clear/Undo — gated by its own permission) ----------------
 function renderRecycleBin(){
   try{ _renderRecycleBinImpl(); }
   catch(e){
@@ -3491,17 +3659,18 @@ function _renderRecycleBinImpl(){
   var body = document.getElementById("recycleBinBody");
   var list = STATE.recycleBin.slice().sort(function(a,b){ return b.deletedAt-a.deletedAt; });
   if(list.length===0){
-    body.innerHTML = '<tr><td colspan="6"><div class="empty">'+t("empty_recycle_bin")+'</div></td></tr>';
+    body.innerHTML = '<tr><td colspan="4"><div class="empty">'+t("empty_recycle_bin")+'</div></td></tr>';
     return;
   }
   body.innerHTML = list.map(function(rb){
-    var a = rb.action || (rb.receipt && rb.receipt.tx) || {};
-    var kindLabel = rb.receipt ? t("recycle_kind_receipt") : t("recycle_kind_history");
-    var lines = a.lines || [];
+    var whatLabel;
+    if(rb.receipt){ whatLabel = tf("recycle_what_receipt", rb.receipt.tx.formNo); }
+    else if(rb.itemHistoryEntry){ whatLabel = tf("recycle_what_item", rb.itemHistoryEntry.itemCode); }
+    else if(rb.receiptEditEntry){ whatLabel = tf("recycle_what_receiptedit", rb.receiptEditEntry.formNo); }
+    else if(rb.action){ whatLabel = tf("recycle_what_newreceipt", rb.action.formNo); }
+    else { whatLabel = "—"; }
     return '<tr>'+
-      '<td class="mono">'+esc(a.formNo)+'</td>'+
-      '<td>'+esc(a.partyName)+' <span style="color:var(--muted); font-size:11px;">('+kindLabel+')</span></td>'+
-      '<td>'+lines.length+'</td>'+
+      '<td>'+whatLabel+'</td>'+
       '<td>'+esc(new Date(rb.deletedAt).toLocaleString())+'</td>'+
       '<td>'+esc(rb.deletedByName)+'</td>'+
       '<td style="white-space:nowrap;"><a class="link" data-restore="'+esc(rb.id)+'">'+t("btn_restore")+'</a> &nbsp; <a class="link" data-purge="'+esc(rb.id)+'" style="color:var(--out);">'+t("btn_delete_forever")+'</a></td>'+
@@ -3535,32 +3704,52 @@ async function restoreFromRecycleBin(rbId){
     return;
   }
 
+  if(entry.itemHistoryEntry){
+    // Clearing never touched the item itself, only tidied the history list, so restoring is just
+    // putting the record back — no item data to reconcile.
+    STATE.itemHistory.push(entry.itemHistoryEntry);
+    STATE.recycleBin = STATE.recycleBin.filter(function(e){ return e.id!==rbId; });
+    logActivity("recycle_restore", tf("log_recycle_restored", entry.itemHistoryEntry.itemCode));
+    renderHistory();
+    toast(t("t_restored"));
+    Promise.all([saveItemHistory(), saveRecycleBin()]).catch(function(e){ console.error("Background save failed:", e); });
+    return;
+  }
+
+  if(entry.receiptEditEntry){
+    STATE.receiptEditHistory.push(entry.receiptEditEntry);
+    STATE.recycleBin = STATE.recycleBin.filter(function(e){ return e.id!==rbId; });
+    logActivity("recycle_restore", tf("log_recycle_restored", entry.receiptEditEntry.formNo));
+    renderHistory();
+    toast(t("t_restored"));
+    Promise.all([saveReceiptEditHistory(), saveRecycleBin()]).catch(function(e){ console.error("Background save failed:", e); });
+    return;
+  }
+
+  // A cleared "New Receipt" action: Clear never touched the receipt's actual lines (only Undo
+  // does that), so the lines are still there on the tx — restoring just needs to bring the
+  // history record itself back, never re-insert lines that were never removed.
   var action = entry.action;
   STATE.actions.push(action);
-  var dest = STATE.tx.find(function(x){ return String(x.formNo).trim()===String(action.formNo).trim() && x.type===action.type; });
-  if(dest){
-    action.lines.forEach(function(l){ dest.lines.push(l); });
-  } else {
-    STATE.tx.push({ id:"TX-"+Date.now(), formNo:action.formNo, date:action.date, type:action.type,
-      partyType:action.partyType, inSubType:action.inSubType, supplierRefNo:action.supplierRefNo,
-      partyName:action.partyName, recipientName:action.recipientName, notes:action.notes,
-      lines:action.lines, createdAt:action.createdAt });
-    var numericNo = parseInt(action.formNo,10);
-    if(!isNaN(numericNo) && numericNo>=STATE.meta.formCounter) STATE.meta.formCounter = numericNo+1;
-  }
   STATE.recycleBin = STATE.recycleBin.filter(function(e){ return e.id!==rbId; });
   logActivity("recycle_restore", tf("log_recycle_restored", action.formNo));
   renderHistory();
   toast(t("t_restored"));
-  Promise.all([saveActions(), saveTx(), saveMeta(), saveRecycleBin()]).catch(function(e){ console.error("Background save failed:", e); });
+  Promise.all([saveActions(), saveRecycleBin()]).catch(function(e){ console.error("Background save failed:", e); });
 }
 async function purgeFromRecycleBin(rbId){
   if(!requirePermission("manageRecycleBin")) return;
   if(!confirm(t("t_confirm_purge"))) return;
   var entry = STATE.recycleBin.find(function(e){ return e.id===rbId; });
   STATE.recycleBin = STATE.recycleBin.filter(function(e){ return e.id!==rbId; });
-  var formNoForLog = entry ? (entry.action ? entry.action.formNo : entry.receipt.tx.formNo) : rbId;
-  logActivity("recycle_purge", tf("log_recycle_purged", formNoForLog));
+  var labelForLog = "—";
+  if(entry){
+    if(entry.receipt) labelForLog = entry.receipt.tx.formNo;
+    else if(entry.itemHistoryEntry) labelForLog = entry.itemHistoryEntry.itemCode;
+    else if(entry.receiptEditEntry) labelForLog = entry.receiptEditEntry.formNo;
+    else if(entry.action) labelForLog = entry.action.formNo;
+  }
+  logActivity("recycle_purge", tf("log_recycle_purged", labelForLog));
   renderRecycleBin();
   toast(t("t_purged"));
   saveRecycleBin().catch(function(e){ console.error("Background save failed:", e); });
@@ -4009,6 +4198,32 @@ function logActivity(action, details){
   STATE.activityLog.push(entry);
   if(STATE.activityLog.length > 3000) STATE.activityLog = STATE.activityLog.slice(-3000);
   saveActivityLog();
+}
+// One entry per item add/edit, carrying enough of a snapshot to undo it: an add's "before" is
+// null (undo = remove it), an edit's "before" is the item's exact prior field values (undo =
+// restore them).
+function pushItemHistory(action, itemCode, before, after){
+  STATE.itemHistory.push({
+    id:"IH-"+Date.now()+"-"+Math.random().toString(36).slice(2,7),
+    action: action, itemCode: itemCode, before: before, after: after,
+    userId: currentUser ? currentUser.id : null,
+    userName: currentUser ? currentUser.name : t("system_user_label"),
+    timestamp: Date.now()
+  });
+}
+// One entry per receipt edit (not creation — that's already covered by STATE.actions), carrying
+// a full before/after snapshot of the receipt's editable fields so an edit can be undone cleanly.
+function pushReceiptEditHistory(tx, before){
+  var after = { type:tx.type, partyType:tx.partyType, inSubType:tx.inSubType, partyName:tx.partyName,
+    supplierRefNo:tx.supplierRefNo, supplierInvoiceNo:tx.supplierInvoiceNo, date:tx.date,
+    recipientName:tx.recipientName, notes:tx.notes, lines: JSON.parse(JSON.stringify(tx.lines)) };
+  STATE.receiptEditHistory.push({
+    id:"REH-"+Date.now()+"-"+Math.random().toString(36).slice(2,7),
+    txId: tx.id, formNo: tx.formNo, before: before, after: after,
+    userId: currentUser ? currentUser.id : null,
+    userName: currentUser ? currentUser.name : t("system_user_label"),
+    timestamp: Date.now()
+  });
 }
 function applyPermissionUI(){
   var navMap = { dashboard:"viewDashboard", items:"viewItems", newtx:"newReceipt", receipts:"viewReceipts",
