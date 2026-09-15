@@ -267,7 +267,7 @@
       <div data-i18n="sidebar_note">Everyone who opens this link shares this data.<br>Sintech For Engineering Supplies &amp; Trade</div>
       <button class="btn ghost sm" id="btnLoadFile" style="margin-top:10px; width:100%; color:#fff; border-color:rgba(255,255,255,.3);" data-i18n="btn_load">📂 Load data file</button>
       <input type="file" id="loadFileInput" accept=".html,.json" style="display:none;">
-      <div style="margin-top:10px; font-size:10px; color:rgba(255,255,255,.45); text-align:center;">Build 2026-09-15 07:56 UTC</div>
+      <div style="margin-top:10px; font-size:10px; color:rgba(255,255,255,.45); text-align:center;">Build 2026-09-15 08:17 UTC</div>
     </div>
   </div>
 
@@ -340,11 +340,11 @@
         <div class="grid3" style="margin-bottom:14px;">
           <div class="field" id="txProjectField">
             <label data-i18n="lbl_party_name_project">Project / Site</label>
-            <input id="txProjectName" data-i18n-ph="ph_party_project" placeholder="e.g. New Steel Plant - Panel Room">
+            <input id="txProjectName" placeholder="e.g. RubyRed">
           </div>
           <div class="field" id="txClientField">
             <label id="txClientLbl" data-i18n="lbl_party_name_client">Company Name</label>
-            <input id="txClientName" data-i18n-ph="ph_party_client" placeholder="e.g. Habib El Borg Co.">
+            <input id="txClientName" placeholder="e.g. Bytech">
           </div>
           <div class="field">
             <label data-i18n="lbl_date">Date</label>
@@ -872,6 +872,7 @@ var I18N = {
     lbl_formno:"Form No.", lbl_supplier_ref:"Supplier Reference No. (optional)", ph_supplier_ref:"Optional",
     lbl_party_name_client:"Company Name", lbl_party_name_project:"Project / Site", lbl_client_company_in:"Company / Client Name", lbl_supplier_name:"Supplier Name",
     ph_party_client:"e.g. Habib El Borg Co.", ph_party_project:"e.g. New Steel Plant - Panel Room",
+    ph_supplier_hint:"e.g. Bytech", ph_company_hint:"e.g. Global", ph_project_hint:"e.g. RubyRed",
     lbl_date:"Date", lbl_recipient:"Received By", ph_recipient:"Name of recipient",
     th_line_code:"Code", th_line_name:"Name", th_line_qty:"Qty", th_line_price:"Unit Price (optional)", th_line_total:"Total",
     btn_add_line:"+ Add item", lbl_notes:"Notes", ph_notes:"Optional",
@@ -1017,6 +1018,7 @@ var I18N = {
     lbl_formno:"رقم الإذن", lbl_supplier_ref:"رقم إذن المورد (اختياري)", ph_supplier_ref:"اختياري",
     lbl_party_name_client:"اسم الشركة", lbl_party_name_project:"المشروع / الموقع", lbl_client_company_in:"اسم الشركة/العميل", lbl_supplier_name:"اسم المورد",
     ph_party_client:"مثال: م. حبيب البرج", ph_party_project:"مثال: مصنع الحديد الجديد - غرفة اللوحات",
+    ph_supplier_hint:"مثال: جيلا", ph_company_hint:"مثال: جلوبال", ph_project_hint:"مثال: روبيرد البرج",
     lbl_date:"التاريخ", lbl_recipient:"المستلم", ph_recipient:"اسم المستلم",
     th_line_code:"الكود", th_line_name:"الاسم", th_line_qty:"الكمية", th_line_price:"سعر الوحدة (اختياري)", th_line_total:"الإجمالي",
     btn_add_line:"+ إضافة صنف", lbl_notes:"ملاحظات", ph_notes:"اختياري",
@@ -1162,6 +1164,7 @@ var I18N = {
     lbl_formno:"Fiş No.", lbl_supplier_ref:"Tedarikçi Referans No. (isteğe bağlı)", ph_supplier_ref:"İsteğe bağlı",
     lbl_party_name_client:"Şirket Adı", lbl_party_name_project:"Proje / Saha", lbl_client_company_in:"Şirket / Müşteri Adı", lbl_supplier_name:"Tedarikçi Adı",
     ph_party_client:"örn. Habib El Borg Şti.", ph_party_project:"örn. Yeni Çelik Fabrikası - Pano Odası",
+    ph_supplier_hint:"örn. Bytech", ph_company_hint:"örn. Global", ph_project_hint:"örn. RubyRed",
     lbl_date:"Tarih", lbl_recipient:"Teslim Alan", ph_recipient:"Teslim alanın adı",
     th_line_code:"Kod", th_line_name:"İsim", th_line_qty:"Miktar", th_line_price:"Birim Fiyat (isteğe bağlı)", th_line_total:"Toplam",
     btn_add_line:"+ Ürün ekle", lbl_notes:"Notlar", ph_notes:"İsteğe bağlı",
@@ -1876,10 +1879,19 @@ function updateFieldVisibilityFor(prefix){
   var projectField = document.getElementById(prefix+"ProjectField");
   var clientField = document.getElementById(prefix+"ClientField");
   var clientLbl = document.getElementById(prefix+"ClientLbl");
+  var clientInput = document.getElementById(prefix+"ClientName");
+  var projectInput = document.getElementById(prefix+"ProjectName");
+  if(projectInput) projectInput.placeholder = t("ph_project_hint");
   if(type === "IN"){
     projectField.style.display = "none";
     clientField.style.display = "";
-    if(clientLbl) clientLbl.textContent = (party === "returned") ? t("lbl_party_name_client") : t("lbl_supplier_name");
+    if(party === "returned"){
+      if(clientLbl) clientLbl.textContent = t("lbl_party_name_client");
+      if(clientInput) clientInput.placeholder = t("ph_company_hint");
+    } else {
+      if(clientLbl) clientLbl.textContent = t("lbl_supplier_name");
+      if(clientInput) clientInput.placeholder = t("ph_supplier_hint");
+    }
   } else if(party === "project"){
     projectField.style.display = "";
     clientField.style.display = "none";
@@ -1887,6 +1899,7 @@ function updateFieldVisibilityFor(prefix){
     projectField.style.display = "none";
     clientField.style.display = "";
     if(clientLbl) clientLbl.textContent = t("lbl_party_name_client");
+    if(clientInput) clientInput.placeholder = t("ph_company_hint");
   }
 }
 // Resolves what "type + party sub-choice + the two name boxes" mean, for saving.
