@@ -30,7 +30,7 @@
     keeps the sidebar and each tab's sticky title/search bar from drifting away on scroll */
   }
   code, .mono{ font-family: ui-monospace, "SF Mono", Consolas, monospace; white-space:nowrap; }
-  #app{ display:flex; height:100vh; direction:ltr; }
+  #app{ display:flex; height:100vh; direction:ltr; opacity:0; transition:opacity .15s; }
 
   /* ---------- SIDEBAR ---------- */
   #sidebar{
@@ -42,7 +42,7 @@
   #sidebar .brand .name{ font-size:18px; font-weight:700; letter-spacing:.3px; }
   #sidebar .brand .tag{ font-size:11px; color:#9FB3C8; margin-top:2px; }
   .brand-logo{ display:block; width:100%; background:#fff; border-radius:8px; padding:8px 10px; }
-  #topBar{ position:fixed; top:14px; right:14px; z-index:60; display:flex; align-items:center; gap:10px; background:var(--navy); padding:6px 8px; border-radius:24px; box-shadow:0 4px 14px rgba(0,0,0,.18); }
+  #topBar{ position:fixed; top:14px; right:14px; z-index:60; display:flex; align-items:center; gap:10px; background:var(--navy); padding:6px 8px; border-radius:24px; box-shadow:0 4px 14px rgba(0,0,0,.18); opacity:0; transition:opacity .15s; }
   #topCover{ position:fixed; top:0; left:210px; right:0; height:70px; background:var(--bg); z-index:50; }
   #langToggle{ display:flex; border:1px solid rgba(255,255,255,.25); border-radius:20px; overflow:hidden; }
   #langToggle button{ all:unset; display:flex; align-items:center; justify-content:center; padding:5px 8px; cursor:pointer; border-radius:14px; }
@@ -58,7 +58,7 @@
   #sidebar .foot{ margin-top:auto; padding:14px 20px 0; font-size:11px; color:#7C90A6; border-top:1px solid rgba(255,255,255,.1); }
 
   /* ---------- MAIN ---------- */
-  #main{ flex:1; height:100vh; overflow-y:auto; overflow-x:hidden; padding:26px 30px; padding-top:70px; }
+  #main{ flex:1; height:100vh; overflow-y:auto; overflow-x:hidden; padding:26px 30px; padding-top:70px; opacity:0; transition:opacity .15s; }
   .view{ display:none; }
   .view.active{ display:block; }
   .view-header, .sticky-head{
@@ -285,7 +285,7 @@
       <div data-i18n="sidebar_note">Everyone who opens this link shares this data.<br>Sintech For Engineering Supplies &amp; Trade</div>
       <button class="btn ghost sm" id="btnLoadFile" style="margin-top:10px; width:100%; color:#fff; border-color:rgba(255,255,255,.3);" data-i18n="btn_load">📂 Load data file</button>
       <input type="file" id="loadFileInput" accept=".html,.json" style="display:none;">
-      <div style="margin-top:10px; font-size:10px; color:rgba(255,255,255,.45); text-align:center;">Build 2026-09-16 07:02 UTC</div>
+      <div style="margin-top:10px; font-size:10px; color:rgba(255,255,255,.45); text-align:center;">Build 2026-09-16 07:48 UTC</div>
     </div>
   </div>
 
@@ -409,7 +409,8 @@
         <h1 data-i18n="receipts_title">Receipts</h1>
         <p class="subtitle" data-i18n="receipts_subtitle">Look up a receipt by its number and compare it with your paper copy</p>
         <div class="toolbar" id="receiptsKindTabs">
-          <button class="btn ghost sm receipts-kind-tab active" data-receiptskind="addition" data-i18n="nav_addition_notes">Addition Notes</button>
+          <button class="btn ghost sm receipts-kind-tab active" data-receiptskind="all" data-i18n="nav_all_receipts">All Receipts</button>
+          <button class="btn ghost sm receipts-kind-tab" data-receiptskind="addition" data-i18n="nav_addition_notes">Addition Notes</button>
           <button class="btn ghost sm receipts-kind-tab" data-receiptskind="receipt" data-i18n="nav_receipt_notes">Receipt Notes</button>
         </div>
         <div class="toolbar">
@@ -1182,9 +1183,9 @@ var I18N = {
     log_category_added:"Added category %s -> %s", log_category_deleted:"Deleted category prefix %s",
     log_unit_added:"Added unit %s", log_unit_deleted:"Deleted unit %s",
     perm_view_dashboard:"View Dashboard", perm_view_items:"View Items", perm_add_items:"Add Items", perm_edit_items:"Edit Items", perm_delete_items:"Delete Items",
-    perm_new_receipt:"Create Receipts", perm_view_receipts:"View Receipts", perm_edit_receipts:"Edit Receipts", perm_verify_receipts:"Verify Receipts", perm_delete_receipts:"Delete Receipts",
+    perm_new_receipt:"Create Receipts", perm_view_receipts:"View All Receipts (combined tab)", perm_edit_receipts:"Edit Receipts", perm_verify_receipts:"Verify Receipts", perm_delete_receipts:"Delete Receipts",
     perm_view_addition_notes:"View Addition Notes (Incoming)", perm_view_receipt_notes:"View Receipt Notes (Outgoing)",
-    nav_addition_notes:"Addition Notes", nav_receipt_notes:"Receipt Notes",
+    nav_addition_notes:"Addition Notes", nav_receipt_notes:"Receipt Notes", nav_all_receipts:"All Receipts",
     perm_delete_card_rows:"Delete Item Card Rows",
     btn_mark_out_of_stock:"Mark as Out of Stock", t_already_zero:"This item is already at zero.",
     t_confirm_zero_stock:"Bring %s to zero? Current balance is %s — this will record an adjustment movement for the difference.",
@@ -1394,9 +1395,9 @@ var I18N = {
     log_category_added:"تمت إضافة الفئة %s -> %s", log_category_deleted:"تم حذف بادئة الفئة %s",
     log_unit_added:"تمت إضافة الوحدة %s", log_unit_deleted:"تم حذف الوحدة %s",
     perm_view_dashboard:"عرض لوحة المتابعة", perm_view_items:"عرض الأصناف", perm_add_items:"إضافة أصناف", perm_edit_items:"تعديل أصناف", perm_delete_items:"حذف أصناف",
-    perm_new_receipt:"إنشاء إذونات", perm_view_receipts:"عرض الإذونات", perm_edit_receipts:"تعديل الإذونات", perm_verify_receipts:"مطابقة الإذونات", perm_delete_receipts:"حذف الإذونات",
+    perm_new_receipt:"إنشاء إذونات", perm_view_receipts:"عرض كل الإذونات (تبويب موحّد)", perm_edit_receipts:"تعديل الإذونات", perm_verify_receipts:"مطابقة الإذونات", perm_delete_receipts:"حذف الإذونات",
     perm_view_addition_notes:"عرض إذونات الإضافة (وارد)", perm_view_receipt_notes:"عرض إذونات الاستلام (صادر)",
-    nav_addition_notes:"إذونات الإضافة", nav_receipt_notes:"إذونات الاستلام",
+    nav_addition_notes:"إذونات الإضافة", nav_receipt_notes:"إذونات الاستلام", nav_all_receipts:"كل الإذونات",
     perm_delete_card_rows:"حذف صفوف بطاقة الصنف",
     btn_mark_out_of_stock:"تحديد كنافذ من المخزون", t_already_zero:"هذا الصنف رصيده صفر بالفعل.",
     t_confirm_zero_stock:"تصفير رصيد %s؟ الرصيد الحالي %s — سيتم تسجيل حركة تسوية بالفرق.",
@@ -1606,9 +1607,9 @@ var I18N = {
     log_category_added:"%s -> %s kategorisi eklendi", log_category_deleted:"%s kategori ön eki silindi",
     log_unit_added:"%s birimi eklendi", log_unit_deleted:"%s birimi silindi",
     perm_view_dashboard:"Paneli Görüntüle", perm_view_items:"Ürünleri Görüntüle", perm_add_items:"Ürün Ekle", perm_edit_items:"Ürün Düzenle", perm_delete_items:"Ürün Sil",
-    perm_new_receipt:"Fiş Oluştur", perm_view_receipts:"Fişleri Görüntüle", perm_edit_receipts:"Fişleri Düzenle", perm_verify_receipts:"Fişleri Doğrula", perm_delete_receipts:"Fişleri Sil",
+    perm_new_receipt:"Fiş Oluştur", perm_view_receipts:"Tüm Fişleri Görüntüle (birleşik sekme)", perm_edit_receipts:"Fişleri Düzenle", perm_verify_receipts:"Fişleri Doğrula", perm_delete_receipts:"Fişleri Sil",
     perm_view_addition_notes:"Ekleme Fişlerini Görüntüle (Giriş)", perm_view_receipt_notes:"Teslim Fişlerini Görüntüle (Çıkış)",
-    nav_addition_notes:"Ekleme Fişleri", nav_receipt_notes:"Teslim Fişleri",
+    nav_addition_notes:"Ekleme Fişleri", nav_receipt_notes:"Teslim Fişleri", nav_all_receipts:"Tüm Fişler",
     perm_delete_card_rows:"Ürün Kartı Satırlarını Sil",
     btn_mark_out_of_stock:"Stokta Yok Olarak İşaretle", t_already_zero:"Bu ürün zaten sıfırda.",
     t_confirm_zero_stock:"%s sıfırlansın mı? Mevcut bakiye %s — farkı için bir düzeltme hareketi kaydedilecek.",
@@ -2423,12 +2424,13 @@ function updatePartyOptionsFor(prefix){
 // Type/Party context doesn't lose a selection) — and if that value isn't in the directory at all
 // (an older receipt from before this became a managed list), it's kept as its own option so the
 // field still shows the truth rather than silently blanking out real data.
-function populatePartySelect(sel, currentValue, allowedKinds){
+function populatePartySelect(sel, currentValue, allowedKinds, kindsMap){
   if(!sel) return;
   var directory = (STATE.partyDirectory||[]).slice().sort(function(a,b){ return a.name.localeCompare(b.name); });
   if(allowedKinds){
+    var map = kindsMap || buildPartyKindsMap();
     directory = directory.filter(function(p){
-      var kinds = partyKinds(p.name);
+      var kinds = partyKinds(p.name, map);
       return allowedKinds.some(function(k){ return kinds[k]; });
     });
   }
@@ -2451,16 +2453,17 @@ function updateFieldVisibilityFor(prefix){
   var clientLbl = document.getElementById(prefix+"ClientLbl");
   var clientInput = document.getElementById(prefix+"ClientName");
   var projectInput = document.getElementById(prefix+"ProjectName");
-  populatePartySelect(projectInput, projectInput ? projectInput.value : "", ["project"]);
+  var kindsMap = buildPartyKindsMap(); // one pass shared by both selects below, instead of one pass each
+  populatePartySelect(projectInput, projectInput ? projectInput.value : "", ["project"], kindsMap);
   if(type === "IN"){
     projectField.style.display = "none";
     clientField.style.display = "";
     if(party === "returned"){
       if(clientLbl) clientLbl.textContent = t("lbl_party_name_client");
-      populatePartySelect(clientInput, clientInput ? clientInput.value : "", ["client","project"]);
+      populatePartySelect(clientInput, clientInput ? clientInput.value : "", ["client","project"], kindsMap);
     } else {
       if(clientLbl) clientLbl.textContent = t("lbl_supplier_name");
-      populatePartySelect(clientInput, clientInput ? clientInput.value : "", ["supplier"]);
+      populatePartySelect(clientInput, clientInput ? clientInput.value : "", ["supplier"], kindsMap);
     }
   } else if(party === "project"){
     projectField.style.display = "";
@@ -2469,7 +2472,7 @@ function updateFieldVisibilityFor(prefix){
     projectField.style.display = "none";
     clientField.style.display = "";
     if(clientLbl) clientLbl.textContent = t("lbl_party_name_client");
-    populatePartySelect(clientInput, clientInput ? clientInput.value : "", ["client","project"]);
+    populatePartySelect(clientInput, clientInput ? clientInput.value : "", ["client","project"], kindsMap);
   }
 }
 // Resolves what "type + party sub-choice + the two name boxes" mean, for saving.
@@ -2673,19 +2676,20 @@ document.getElementById("btnSaveTx").addEventListener("click", async function(){
 });
 
 // ---------------- RECEIPTS VIEW (reconciliation against paper copies) ----------------
-var currentReceiptsKind = "addition"; // "addition" = Incoming, "receipt" = Outgoing — matches the
-  // exact title each printed receipt already shows (Addition Note / Receipt Note)
+var currentReceiptsKind = "all"; // "all" = every receipt, "addition" = Incoming, "receipt" = Outgoing —
+  // "addition"/"receipt" match the exact title each printed receipt already shows (Addition Note / Receipt Note)
 function renderReceiptsTab(){
   var q = (document.getElementById("receiptsSearch").value||"").trim().toLowerCase();
   var unverifiedOnly = document.getElementById("receiptsUnverifiedOnly").checked;
-  var wantType = (currentReceiptsKind==="addition") ? "IN" : "OUT";
-  var list = STATE.tx.filter(function(tx){ return !isNaN(parseInt(tx.formNo,10)) && tx.type===wantType; });
+  var wantType = (currentReceiptsKind==="addition") ? "IN" : (currentReceiptsKind==="receipt") ? "OUT" : null;
+  var matchesKind = function(tx){ return wantType===null || tx.type===wantType; };
+  var list = STATE.tx.filter(function(tx){ return !isNaN(parseInt(tx.formNo,10)) && matchesKind(tx); });
   if(q) list = list.filter(function(tx){ return String(tx.formNo).toLowerCase().indexOf(q)>=0; });
   if(unverifiedOnly) list = list.filter(function(tx){ return !tx.verified; });
   list.sort(function(a,b){ return parseInt(a.formNo,10) - parseInt(b.formNo,10); });
 
-  var numberedTotal = STATE.tx.filter(function(tx){ return !isNaN(parseInt(tx.formNo,10)) && tx.type===wantType; }).length;
-  var verifiedCount = STATE.tx.filter(function(tx){ return tx.verified && !isNaN(parseInt(tx.formNo,10)) && tx.type===wantType; }).length;
+  var numberedTotal = STATE.tx.filter(function(tx){ return !isNaN(parseInt(tx.formNo,10)) && matchesKind(tx); }).length;
+  var verifiedCount = STATE.tx.filter(function(tx){ return tx.verified && !isNaN(parseInt(tx.formNo,10)) && matchesKind(tx); }).length;
   document.getElementById("receiptsSummary").textContent = tf("receipts_summary", verifiedCount, numberedTotal);
 
   var container = document.getElementById("receiptsList");
@@ -2713,7 +2717,7 @@ function renderReceiptsTab(){
           '<button class="btn ghost sm" data-toggleverify="'+esc(tx.id)+'">'+(tx.verified? t("btn_unmark_verified") : t("btn_mark_verified"))+'</button>'+
           '<button class="btn ghost sm" data-editrc="'+esc(tx.id)+'">'+t("btn_edit_receipt")+'</button>'+
           '<button class="btn ghost sm" data-delrc="'+esc(tx.id)+'" style="color:var(--out); border-color:var(--out);">'+t("btn_delete_receipt")+'</button>'+
-          '<button class="btn ghost sm" data-openrc="'+esc(tx.id)+'">'+t("link_open")+'</button>'+
+          '<button class="btn ghost sm" data-openrc="'+esc(tx.id)+'" style="color:var(--ok); border-color:var(--ok);">'+t("link_open")+'</button>'+
         '</div>'+
       '</div>'+
       '<table><thead><tr><th>'+t("th_item")+'</th><th style="text-align:center;">'+t("th_line_qty")+'</th><th style="text-align:center;">'+t("th_line_price")+'</th><th style="text-align:center;">'+t("th_line_total")+'</th></tr></thead><tbody>'+rows+'</tbody></table>'+
@@ -2742,28 +2746,28 @@ document.getElementById("receiptsUnverifiedOnly").addEventListener("change", ren
 document.querySelectorAll(".receipts-kind-tab").forEach(function(btn){
   btn.addEventListener("click", function(){
     var kind = btn.dataset.receiptskind;
-    var allowed = kind==="addition" ? (hasPermission("viewAdditionNotes")||hasPermission("viewReceipts")) : (hasPermission("viewReceiptNotes")||hasPermission("viewReceipts"));
-    if(!allowed) return;
+    var permKey = kind==="all" ? "viewReceipts" : kind==="addition" ? "viewAdditionNotes" : "viewReceiptNotes";
+    if(!hasPermission(permKey)) return;
     currentReceiptsKind = kind;
     document.querySelectorAll(".receipts-kind-tab").forEach(function(b){ b.classList.toggle("active", b===btn); });
     renderReceiptsTab();
   });
 });
-// Shows only the tab(s) this person actually has — if they only have one of the two, the switcher
-// itself disappears and that's simply the whole view, no toggling needed. The old blanket
-// "View Receipts" permission still grants both, so nobody who already had full access loses any
-// of it just because these two finer permissions now exist.
+// Each of the three tabs is controlled by its own independent permission — no overlap, no
+// fallback. Someone given only "View Addition Notes" sees only that tab, full stop; the switcher
+// itself only appears when a person can actually choose between two or more tabs.
 function applyReceiptsKindPermissions(){
-  var canAddition = hasPermission("viewAdditionNotes") || hasPermission("viewReceipts");
-  var canReceipt = hasPermission("viewReceiptNotes") || hasPermission("viewReceipts");
-  var tabsWrap = document.getElementById("receiptsKindTabs");
-  var additionBtn = document.querySelector('[data-receiptskind="addition"]');
-  var receiptBtn = document.querySelector('[data-receiptskind="receipt"]');
-  additionBtn.style.display = canAddition ? "" : "none";
-  receiptBtn.style.display = canReceipt ? "" : "none";
-  tabsWrap.style.display = (canAddition && canReceipt) ? "" : "none";
-  if(!canAddition && canReceipt) currentReceiptsKind = "receipt";
-  else if(canAddition && !canReceipt) currentReceiptsKind = "addition";
+  var perms = { all: hasPermission("viewReceipts"), addition: hasPermission("viewAdditionNotes"), receipt: hasPermission("viewReceiptNotes") };
+  var visibleCount = 0;
+  ["all","addition","receipt"].forEach(function(kind){
+    var btn = document.querySelector('[data-receiptskind="'+kind+'"]');
+    btn.style.display = perms[kind] ? "" : "none";
+    if(perms[kind]) visibleCount++;
+  });
+  document.getElementById("receiptsKindTabs").style.display = (visibleCount > 1) ? "" : "none";
+  if(!perms[currentReceiptsKind]){
+    currentReceiptsKind = perms.all ? "all" : perms.addition ? "addition" : perms.receipt ? "receipt" : currentReceiptsKind;
+  }
   document.querySelectorAll(".receipts-kind-tab").forEach(function(b){
     b.classList.toggle("active", b.dataset.receiptskind===currentReceiptsKind);
   });
@@ -4269,9 +4273,8 @@ function applyPermissionUI(){
   var firstVisible = null;
   document.querySelectorAll("#navButtons button[data-view]").forEach(function(btn){
     var permKey = navMap[btn.dataset.view];
-    // Receipts is visible with the old blanket permission OR either of the two finer ones, so
-    // nobody who already had access loses it, while a person given only one of the two new
-    // permissions can still reach the tab (just scoped to their one kind once they're inside).
+    // Receipts is visible with any of the three tab permissions — each controls its own tab
+    // independently, so this just checks whether at least one tab would actually be visible.
     var visible = btn.dataset.view==="receipts"
       ? (!STATE.meta.locked || hasPermission("viewReceipts") || hasPermission("viewAdditionNotes") || hasPermission("viewReceiptNotes"))
       : (!STATE.meta.locked || hasPermission(permKey));
@@ -4294,6 +4297,15 @@ function applyPermissionUI(){
   } else {
     indicator.style.display = "none";
   }
+}
+// Reveals the whole app shell at once — sidebar, top bar, and main content together — so nothing
+// (not even the sidebar or nav) can show before the lock decision has actually been made. Always
+// called only after checkLockGate() has already run, so if it's locked, the sign-in overlay is
+// already sitting on top the instant any of this becomes visible.
+function revealAppShell(){
+  document.getElementById("app").style.opacity = "1";
+  document.getElementById("topBar").style.opacity = "1";
+  document.getElementById("main").style.opacity = "1";
 }
 function checkLockGate(){
   if(STATE.meta.locked && !currentUser){
@@ -4428,23 +4440,45 @@ function partyUseCount(name){
 }
 // A human-readable breakdown like "8 Supplier, 3 Client" — since one real company can legitimately
 // show up in more than one role over time, this is informational only, never a fixed property.
-function partyKindBreakdown(name){
-  var counts = { supplier:0, client:0, project:0 };
-  STATE.tx.forEach(function(tx){ if(tx.partyName===name) counts[classifyPartyKind(tx)]++; });
-  return ["supplier","client","project"].filter(function(k){ return counts[k]>0; })
-    .map(function(k){ return counts[k]+" "+t("party_kind_"+k); }).join(", ") || t("party_kind_unused");
+// Every one of these three used to re-scan the entire receipt list once per party, per call —
+// fine at 20 receipts, but genuinely slow once there are hundreds, since a single form
+// interaction (changing Type, picking a party) could trigger dozens of these scans at once.
+// This builds the whole name -> kinds picture in one pass instead, then every lookup after that
+// is instant. Rebuilt fresh on each use rather than cached, since it's already fast enough that
+// caching would only add invalidation bugs for no real benefit.
+function buildPartyKindsMap(){
+  var map = {};
+  STATE.tx.forEach(function(tx){
+    var name = tx.partyName;
+    if(!name) return;
+    if(!map[name]) map[name] = {};
+    var k = classifyPartyKind(tx);
+    map[name][k] = (map[name][k]||0) + 1;
+  });
+  return map;
+}
+function partyKindBreakdown(name, kindsMap){
+  var map = kindsMap || buildPartyKindsMap();
+  var counts = map[name] || {};
+  var entry = (STATE.partyDirectory||[]).find(function(p){ return p.name===name; });
+  var have = ["supplier","client","project"].filter(function(k){ return counts[k]; });
+  if(have.length===0 && entry && entry.roles && entry.roles.length){
+    return entry.roles.map(function(r){ return t("party_kind_"+r); }).join(", ");
+  }
+  return have.map(function(k){ return counts[k]+" "+t("party_kind_"+k); }).join(", ") || t("party_kind_unused");
 }
 // True if this party has any real receipt of this kind — a fact from history, not a manual tag,
 // so it's shown locked/checked in the Control Panel rather than something you can untick.
-function partyKindDerived(name, kind){
-  return STATE.tx.some(function(tx){ return tx.partyName===name && classifyPartyKind(tx)===kind; });
+function partyKindDerived(name, kind, kindsMap){
+  var map = kindsMap || buildPartyKindsMap();
+  return !!(map[name] && map[name][kind]);
 }
 // Which kinds a party can be picked as in New/Edit Receipt: real history plus whatever's been
 // manually tagged — so a freshly-added, not-yet-used party is still selectable right away.
-function partyKinds(name){
+function partyKinds(name, kindsMap){
+  var map = kindsMap || buildPartyKindsMap();
+  var kinds = Object.assign({}, map[name]);
   var entry = (STATE.partyDirectory||[]).find(function(p){ return p.name===name; });
-  var kinds = {};
-  STATE.tx.forEach(function(tx){ if(tx.partyName===name) kinds[classifyPartyKind(tx)] = true; });
   if(entry && entry.roles) entry.roles.forEach(function(r){ kinds[r] = true; });
   return kinds;
 }
@@ -4637,6 +4671,7 @@ function _renderControlPanelImpl(){
   var partyBody = document.getElementById("partyDirectoryBody");
   var directory = (STATE.partyDirectory||[]).slice().sort(function(a,b){ return a.name.localeCompare(b.name); });
   var KIND_ORDER = ["supplier","client","project"];
+  var partyKindsMapForRender = buildPartyKindsMap(); // one pass for the whole table, not one per row per kind
   if(directory.length===0){
     partyBody.innerHTML = '<tr><td colspan="3"><div class="empty">'+t("empty_no_parties")+'</div></td></tr>';
   } else {
@@ -4647,7 +4682,7 @@ function _renderControlPanelImpl(){
       var needsReview = !!p.needsReview;
       var usedAsCell = (needsReview ? '<span style="color:var(--copper); font-size:11px; font-weight:600; margin-inline-end:8px;">'+t("party_needs_review")+'</span>' : '') +
         KIND_ORDER.map(function(k){
-        var derived = !needsReview && partyKindDerived(p.name, k);
+        var derived = !needsReview && partyKindDerived(p.name, k, partyKindsMapForRender);
         var tagged = (p.roles||[]).indexOf(k) >= 0;
         var checked = !needsReview && (derived || tagged);
         var hintAttr = derived ? ' title="'+t("party_role_locked_hint")+'"' : '';
@@ -4981,10 +5016,10 @@ async function attemptFreshSeedConnect(){
 
   await runDataMigrations();
   applyI18n();
-  document.getElementById("bootGate").classList.remove("show");
-  document.getElementById("main").style.opacity = "1";
   applyPermissionUI();
   checkLockGate();
+  document.getElementById("bootGate").classList.remove("show");
+  revealAppShell();
   showView("dashboard");
   startFirestoreListeners();
 }
@@ -5009,9 +5044,9 @@ async function boot(){
   // from Firestore in the background exactly as before.
   await runDataMigrations();
   applyI18n();
-  document.getElementById("main").style.opacity = "1";
   applyPermissionUI();
   checkLockGate();
+  revealAppShell();
   showView("dashboard");
   // Everything Firebase-related happens entirely in the background, after the page is already
   // up and usable — loading the SDK, connecting, and pulling the shared data are all off the
