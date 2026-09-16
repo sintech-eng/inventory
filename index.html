@@ -145,6 +145,10 @@
   /* ---------- RECEIPT / PRINT (always bilingual, matches the paper form) ---------- */
   #receiptOverlay{ position:fixed; inset:0; background:rgba(10,20,30,.6); z-index:150; display:none; align-items:flex-start; justify-content:center; overflow-y:auto; padding:26px 16px; }
   #receiptOverlay.show{ display:flex; }
+  #labelPrintOverlay{ position:fixed; inset:0; background:rgba(10,20,30,.6); z-index:150; display:none; align-items:flex-start; justify-content:center; overflow-y:auto; padding:26px 16px; }
+  #labelPrintOverlay.show{ display:flex; }
+  #phoneScanOverlay{ position:fixed; inset:0; background:rgba(10,20,30,.6); z-index:160; display:none; align-items:flex-start; justify-content:center; overflow-y:auto; padding:26px 16px; }
+  #phoneScanOverlay.show{ display:flex; }
   #itemCardOverlay{ position:fixed; inset:0; background:rgba(10,20,30,.6); z-index:150; display:none; align-items:flex-start; justify-content:center; overflow-y:auto; padding:26px 16px; }
   #itemCardOverlay.show{ display:flex; }
   #reportDetailOverlay{ position:fixed; inset:0; background:rgba(10,20,30,.6); z-index:150; display:none; align-items:flex-start; justify-content:center; overflow-y:auto; padding:26px 16px; }
@@ -159,6 +163,15 @@
   .receipt-wrap{ background:#fff; width:100%; max-width:760px; border-radius:6px; overflow:hidden; direction:ltr; }
   .receipt-toolbar{ display:flex; justify-content:space-between; align-items:center; padding:12px 18px; background:#EDF1F4; }
   .receipt-paper{ padding:26px 30px; }
+  .label-sheet{ display:grid; grid-template-columns:repeat(3, 1fr); gap:2mm; padding:20px; direction:ltr; }
+  .label-cell{ width:63.5mm; height:38.1mm; border:1px dashed #ccc; padding:2mm; display:flex; flex-direction:column; align-items:center; justify-content:center; overflow:hidden; box-sizing:border-box; }
+  .label-barcode{ width:100%; height:auto; max-height:15mm; }
+  .label-code{ font-family:monospace; font-weight:700; font-size:11px; margin-top:1mm; color:#111; }
+  .label-name{ font-size:8.5px; color:#555; text-align:center; margin-top:0.5mm; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  @media print{
+    .label-sheet{ padding:0; gap:0; }
+    .label-cell{ border:1px solid #ddd; }
+  }
   .rc-top{ display:flex; justify-content:space-between; align-items:flex-start; border-bottom:3px solid var(--navy); padding-bottom:10px; margin-bottom:14px; }
   .rc-brand{ font-weight:800; font-size:20px; color:var(--navy); letter-spacing:.5px; }
   .rc-brand .sub{ font-size:10px; color:var(--muted); font-weight:600; letter-spacing:1px; }
@@ -189,6 +202,8 @@
     body *{ visibility:hidden; }
     #receiptOverlay, #receiptOverlay *{ visibility:visible; }
     #receiptOverlay{ position:absolute; inset:0; background:#fff; padding:0; }
+    #labelPrintOverlay, #labelPrintOverlay *{ visibility:visible; }
+    #labelPrintOverlay{ position:absolute; inset:0; background:#fff; padding:0; }
     #itemCardOverlay, #itemCardOverlay *{ visibility:visible; }
     #itemCardOverlay{ position:absolute; inset:0; background:#fff; padding:0; }
     #reportDetailOverlay, #reportDetailOverlay *{ visibility:visible; }
@@ -285,7 +300,7 @@
       <div data-i18n="sidebar_note">Everyone who opens this link shares this data.<br>Sintech For Engineering Supplies &amp; Trade</div>
       <button class="btn ghost sm" id="btnLoadFile" style="margin-top:10px; width:100%; color:#fff; border-color:rgba(255,255,255,.3);" data-i18n="btn_load">📂 Load data file</button>
       <input type="file" id="loadFileInput" accept=".html,.json" style="display:none;">
-      <div style="margin-top:10px; font-size:10px; color:rgba(255,255,255,.45); text-align:center;">Build 2026-09-16 07:48 UTC</div>
+      <div style="margin-top:10px; font-size:10px; color:rgba(255,255,255,.45); text-align:center;">Build 2026-09-16 09:11 UTC</div>
     </div>
   </div>
 
@@ -315,11 +330,13 @@
           <input class="search" id="itemSearch" data-i18n-ph="search_items_ph" placeholder="Search by code or name...">
           <select id="itemCatFilter"></select>
           <button class="btn" id="btnAddItem" data-i18n="btn_add_item">+ Add Item</button>
+          <button class="btn ghost sm" id="btnPrintLabels" style="margin-inline-start:auto;" disabled>🏷️ <span data-i18n="btn_print_labels">Print Barcode Labels</span> (<span id="labelSelectedCount">0</span>)</button>
         </div>
       </div>
       <div class="panel" style="padding:0;">
         <table>
           <thead><tr>
+            <th id="itemSelectAllHeader" style="width:34px;"><input type="checkbox" id="itemSelectAll"></th>
             <th data-i18n="th_code">Code</th><th data-i18n="th_name">Name</th><th data-i18n="th_category">Category</th><th data-i18n="th_unit">Unit</th>
             <th data-i18n="th_cost">Purchase Price</th><th data-i18n="th_stock">Current Stock</th><th data-i18n="th_status">Status</th><th></th>
           </tr></thead>
@@ -390,6 +407,7 @@
           <tbody id="txLinesBody"></tbody>
         </table>
         <button class="btn ghost sm" id="btnAddLine" style="margin-top:8px;" data-i18n="btn_add_line">+ Add item</button>
+        <button class="btn ghost sm" id="btnScanPhone" style="margin-top:8px; margin-inline-start:8px; display:none;">📷 <span data-i18n="btn_scan_phone">Scan with Phone</span></button>
 
         <div class="field" style="margin-top:14px;">
           <label data-i18n="lbl_notes">Notes</label>
@@ -839,6 +857,31 @@
   </div>
 </div>
 
+<!-- BARCODE LABEL PRINT OVERLAY — A4 sheet of labels, one per selected item -->
+<div id="labelPrintOverlay">
+  <div class="receipt-wrap" style="max-width:900px;">
+    <div class="receipt-toolbar">
+      <button class="btn ghost sm" id="btnCloseLabelPrint" data-i18n="btn_close">Close</button>
+      <button class="btn copper sm" id="btnPrintLabelSheet" data-i18n="btn_print">🖨 Print</button>
+    </div>
+    <div id="labelSheetPaper"></div>
+  </div>
+</div>
+
+<!-- PHONE CAMERA SCAN OVERLAY — New Receipt only, permission-gated -->
+<div id="phoneScanOverlay">
+  <div class="receipt-wrap" style="max-width:480px;">
+    <div class="receipt-toolbar">
+      <button class="btn ghost sm" id="btnClosePhoneScan" data-i18n="btn_close">Close</button>
+      <span id="phoneScanStatus" style="font-size:12.5px; color:var(--muted);" data-i18n="scan_phone_hint">Point the camera at a barcode</span>
+    </div>
+    <div style="padding:14px; text-align:center;">
+      <video id="phoneScanVideo" style="width:100%; max-width:440px; border-radius:6px; background:#000;" muted playsinline></video>
+      <div id="phoneScanLastResult" style="margin-top:10px; font-size:13px; color:var(--muted); min-height:18px;"></div>
+    </div>
+  </div>
+</div>
+
 <!-- ITEM CARD / HISTORY OVERLAY (بطاقة استاذ صنف — every movement for one item) -->
 <div id="itemCardOverlay">
   <div class="receipt-wrap" id="itemCardWrap" style="max-width:920px;">
@@ -1156,6 +1199,10 @@ var I18N = {
     th_party_name:"Name", th_party_kind:"Kind", th_party_merge:"Merge Into", party_merge_placeholder:"— merge into —",
     th_party_used_as:"Used As", party_kind_unused:"Not used yet", party_tagged_not_used:"not used yet",
     btn_view_receipts:"View Receipts", party_receipts_subtitle:"Every receipt this name appears on, incoming or outgoing.",
+    btn_print_labels:"Print Barcode Labels", t_barcode_lib_failed:"Couldn't load the barcode tool — check your connection and try again.",
+    btn_scan_phone:"Scan with Phone", scan_phone_hint:"Point the camera at a barcode",
+    t_scan_not_found:"No item found for code \"%s\"", t_scan_added:"Scanned %s — %s",
+    t_scan_lib_failed:"Couldn't load the scanning tool — check your connection and try again.", t_scan_camera_failed:"Couldn't access the camera — check your browser's camera permission and try again.",
     btn_merge:"Merge", party_merge_title:"Merge Duplicate", party_merge_into_label:"Keep this one instead",
     party_merge_subtitle:"Merging \"%s\" (%s receipt(s)) — it will disappear from the list and every one of its receipts will switch to whichever name you keep.",
     party_role_locked_hint:"Already has real receipts of this kind — can't be unticked", party_role_added:"tagged", party_role_removed:"untagged",
@@ -1182,7 +1229,7 @@ var I18N = {
     t_unit_code_in_use:"Can't change the code for %s while %s item(s) still use it — delete and recreate it instead once they're reassigned.",
     log_category_added:"Added category %s -> %s", log_category_deleted:"Deleted category prefix %s",
     log_unit_added:"Added unit %s", log_unit_deleted:"Deleted unit %s",
-    perm_view_dashboard:"View Dashboard", perm_view_items:"View Items", perm_add_items:"Add Items", perm_edit_items:"Edit Items", perm_delete_items:"Delete Items",
+    perm_view_dashboard:"View Dashboard", perm_view_items:"View Items", perm_add_items:"Add Items", perm_edit_items:"Edit Items", perm_delete_items:"Delete Items", perm_print_labels:"Print Barcode Labels", perm_phone_scanning:"Scan with Phone (New Receipt)",
     perm_new_receipt:"Create Receipts", perm_view_receipts:"View All Receipts (combined tab)", perm_edit_receipts:"Edit Receipts", perm_verify_receipts:"Verify Receipts", perm_delete_receipts:"Delete Receipts",
     perm_view_addition_notes:"View Addition Notes (Incoming)", perm_view_receipt_notes:"View Receipt Notes (Outgoing)",
     nav_addition_notes:"Addition Notes", nav_receipt_notes:"Receipt Notes", nav_all_receipts:"All Receipts",
@@ -1368,6 +1415,10 @@ var I18N = {
     th_party_name:"الاسم", th_party_kind:"النوع", th_party_merge:"دمج في", party_merge_placeholder:"— دمج في —",
     th_party_used_as:"يُستخدم كـ", party_kind_unused:"لم يُستخدم بعد", party_tagged_not_used:"لم يُستخدم بعد",
     btn_view_receipts:"عرض الإذونات", party_receipts_subtitle:"كل إذن يظهر فيه هذا الاسم، واردًا كان أو صادرًا.",
+    btn_print_labels:"طباعة ملصقات الباركود", t_barcode_lib_failed:"تعذر تحميل أداة الباركود — تحقق من اتصالك وحاول مرة أخرى.",
+    btn_scan_phone:"المسح بالهاتف", scan_phone_hint:"وجّه الكاميرا نحو الباركود",
+    t_scan_not_found:"لم يتم العثور على صنف للكود \"%s\"", t_scan_added:"تم مسح %s — %s",
+    t_scan_lib_failed:"تعذر تحميل أداة المسح — تحقق من اتصالك وحاول مرة أخرى.", t_scan_camera_failed:"تعذر الوصول إلى الكاميرا — تحقق من إذن الكاميرا في متصفحك وحاول مرة أخرى.",
     btn_merge:"دمج", party_merge_title:"دمج تكرار", party_merge_into_label:"احتفظ بهذا بدلاً منه",
     party_merge_subtitle:"دمج \"%s\" (%s إذن) — سيختفي من القائمة وسينتقل كل إذن له إلى أي اسم تحتفظ به.",
     party_role_locked_hint:"لديه بالفعل إذونات حقيقية من هذا النوع — لا يمكن إلغاء تحديده", party_role_added:"تم وضع علامة", party_role_removed:"تم إزالة العلامة",
@@ -1394,7 +1445,7 @@ var I18N = {
     t_unit_code_in_use:"تعذر تغيير رمز %s بينما لا يزال %s صنف يستخدمه — احذفه وأنشئه من جديد بعد إعادة تصنيفها.",
     log_category_added:"تمت إضافة الفئة %s -> %s", log_category_deleted:"تم حذف بادئة الفئة %s",
     log_unit_added:"تمت إضافة الوحدة %s", log_unit_deleted:"تم حذف الوحدة %s",
-    perm_view_dashboard:"عرض لوحة المتابعة", perm_view_items:"عرض الأصناف", perm_add_items:"إضافة أصناف", perm_edit_items:"تعديل أصناف", perm_delete_items:"حذف أصناف",
+    perm_view_dashboard:"عرض لوحة المتابعة", perm_view_items:"عرض الأصناف", perm_add_items:"إضافة أصناف", perm_edit_items:"تعديل أصناف", perm_delete_items:"حذف أصناف", perm_print_labels:"طباعة ملصقات الباركود", perm_phone_scanning:"المسح بالهاتف (إذن جديد)",
     perm_new_receipt:"إنشاء إذونات", perm_view_receipts:"عرض كل الإذونات (تبويب موحّد)", perm_edit_receipts:"تعديل الإذونات", perm_verify_receipts:"مطابقة الإذونات", perm_delete_receipts:"حذف الإذونات",
     perm_view_addition_notes:"عرض إذونات الإضافة (وارد)", perm_view_receipt_notes:"عرض إذونات الاستلام (صادر)",
     nav_addition_notes:"إذونات الإضافة", nav_receipt_notes:"إذونات الاستلام", nav_all_receipts:"كل الإذونات",
@@ -1580,6 +1631,10 @@ var I18N = {
     th_party_name:"İsim", th_party_kind:"Tür", th_party_merge:"Birleştir", party_merge_placeholder:"— birleştirilecek —",
     th_party_used_as:"Şu Şekilde Kullanılıyor", party_kind_unused:"Henüz kullanılmadı", party_tagged_not_used:"henüz kullanılmadı",
     btn_view_receipts:"Fişleri Görüntüle", party_receipts_subtitle:"Bu ismin geçtiği her fiş, giriş veya çıkış.",
+    btn_print_labels:"Barkod Etiketlerini Yazdır", t_barcode_lib_failed:"Barkod aracı yüklenemedi — bağlantınızı kontrol edip tekrar deneyin.",
+    btn_scan_phone:"Telefonla Tara", scan_phone_hint:"Kamerayı bir barkoda doğrultun",
+    t_scan_not_found:"\"%s\" koduna ait ürün bulunamadı", t_scan_added:"Tarandı: %s — %s",
+    t_scan_lib_failed:"Tarama aracı yüklenemedi — bağlantınızı kontrol edip tekrar deneyin.", t_scan_camera_failed:"Kameraya erişilemedi — tarayıcınızın kamera iznini kontrol edip tekrar deneyin.",
     btn_merge:"Birleştir", party_merge_title:"Kopyayı Birleştir", party_merge_into_label:"Bunun yerine bunu tut",
     party_merge_subtitle:"\"%s\" birleştiriliyor (%s fiş) — listeden kaybolacak ve her fişi tuttuğunuz isme geçecek.",
     party_role_locked_hint:"Bu türden gerçek fişleri zaten var — işareti kaldırılamaz", party_role_added:"etiketlendi", party_role_removed:"etiket kaldırıldı",
@@ -1606,7 +1661,7 @@ var I18N = {
     t_unit_code_in_use:"%s hâlâ %s ürün tarafından kullanılırken kodu değiştirilemez — yeniden sınıflandırdıktan sonra silip yeniden oluşturun.",
     log_category_added:"%s -> %s kategorisi eklendi", log_category_deleted:"%s kategori ön eki silindi",
     log_unit_added:"%s birimi eklendi", log_unit_deleted:"%s birimi silindi",
-    perm_view_dashboard:"Paneli Görüntüle", perm_view_items:"Ürünleri Görüntüle", perm_add_items:"Ürün Ekle", perm_edit_items:"Ürün Düzenle", perm_delete_items:"Ürün Sil",
+    perm_view_dashboard:"Paneli Görüntüle", perm_view_items:"Ürünleri Görüntüle", perm_add_items:"Ürün Ekle", perm_edit_items:"Ürün Düzenle", perm_delete_items:"Ürün Sil", perm_print_labels:"Barkod Etiketlerini Yazdır", perm_phone_scanning:"Telefonla Tara (Yeni Fiş)",
     perm_new_receipt:"Fiş Oluştur", perm_view_receipts:"Tüm Fişleri Görüntüle (birleşik sekme)", perm_edit_receipts:"Fişleri Düzenle", perm_verify_receipts:"Fişleri Doğrula", perm_delete_receipts:"Fişleri Sil",
     perm_view_addition_notes:"Ekleme Fişlerini Görüntüle (Giriş)", perm_view_receipt_notes:"Teslim Fişlerini Görüntüle (Çıkış)",
     nav_addition_notes:"Ekleme Fişleri", nav_receipt_notes:"Teslim Fişleri", nav_all_receipts:"Tüm Fişler",
@@ -1976,6 +2031,7 @@ function toast(msg){
 // ---------------- navigation ----------------
 var currentView = "dashboard";
 function showView(name){
+  if(name!=="newtx" && typeof closePhoneScan==="function") closePhoneScan(); // never leave the camera running once you've left the tab it's scoped to
   currentView = name;
   document.querySelectorAll(".view").forEach(function(v){ v.classList.remove("active"); });
   document.getElementById("view-"+name).classList.add("active");
@@ -1987,7 +2043,7 @@ function showView(name){
 function rerenderCurrentView(){
   if(currentView==="dashboard") renderDashboard();
   if(currentView==="items") renderItems();
-  if(currentView==="newtx"){ renderTxLines(); updatePartyOptions(); }
+  if(currentView==="newtx"){ renderTxLines(); updatePartyOptions(); document.getElementById("btnScanPhone").style.display = hasPermission("phoneScanning") ? "" : "none"; }
   if(currentView==="receipts") renderReceiptsTab();
   if(currentView==="reports") renderCurrentReportTab();
   if(currentView==="history") renderHistory();
@@ -2214,7 +2270,10 @@ function populateCatFilter(){
   sel.value = current;
 }
 
+var selectedItemCodes = new Set(); // persists across re-renders (search/filter), so picking items to label survives a search
 function renderItems(){
+  var canPrintLabels = hasPermission("printLabels");
+  applyItemLabelPermissionUI(canPrintLabels);
   populateCatFilter();
   var q = (document.getElementById("itemSearch").value||"").trim().toLowerCase();
   var cat = document.getElementById("itemCatFilter").value;
@@ -2225,8 +2284,10 @@ function renderItems(){
   });
   list.sort(function(a,b){ return compareCodes(a.code, b.code); });
   var body = document.getElementById("itemsBody");
+  var colCount = canPrintLabels ? 9 : 8;
   if(list.length===0){
-    body.innerHTML = '<tr><td colspan="8"><div class="empty">'+t("empty_no_items")+'</div></td></tr>';
+    body.innerHTML = '<tr><td colspan="'+colCount+'"><div class="empty">'+t("empty_no_items")+'</div></td></tr>';
+    if(canPrintLabels) updateLabelSelectionUI();
     return;
   }
   body.innerHTML = list.map(function(i){
@@ -2234,6 +2295,7 @@ function renderItems(){
     var stLabel = st==="ok"?t("status_ok"):(st==="low"?t("status_low"):t("status_out"));
     var price = getLatestPurchasePrice(i.code);
     return '<tr>'+
+      (canPrintLabels ? '<td><input type="checkbox" class="item-select-cb" data-code="'+esc(i.code)+'" '+(selectedItemCodes.has(i.code)?'checked':'')+'></td>' : '')+
       '<td class="mono">'+esc(i.code)+'</td>'+
       '<td>'+esc(i.name)+'</td>'+
       '<td>'+esc(i.category)+'</td>'+
@@ -2250,7 +2312,38 @@ function renderItems(){
   body.querySelectorAll("[data-card]").forEach(function(el){
     el.addEventListener("click", function(){ openItemCard(el.dataset.card); });
   });
+  if(canPrintLabels){
+    body.querySelectorAll(".item-select-cb").forEach(function(cb){
+      cb.addEventListener("change", function(){
+        if(cb.checked) selectedItemCodes.add(cb.dataset.code); else selectedItemCodes.delete(cb.dataset.code);
+        updateLabelSelectionUI();
+      });
+    });
+    updateLabelSelectionUI();
+  }
 }
+// Without this permission, the whole label-printing feature disappears — no checkboxes, no
+// select-all, no print button — not just disabled, genuinely not present for that person.
+function applyItemLabelPermissionUI(canPrintLabels){
+  document.getElementById("itemSelectAllHeader").style.display = canPrintLabels ? "" : "none";
+  document.getElementById("btnPrintLabels").style.display = canPrintLabels ? "" : "none";
+  if(!canPrintLabels) selectedItemCodes.clear();
+}
+function updateLabelSelectionUI(){
+  document.getElementById("labelSelectedCount").textContent = selectedItemCodes.size;
+  document.getElementById("btnPrintLabels").disabled = selectedItemCodes.size===0;
+  var visibleCbs = document.querySelectorAll(".item-select-cb");
+  var selectAll = document.getElementById("itemSelectAll");
+  selectAll.checked = visibleCbs.length>0 && [...visibleCbs].every(function(cb){ return cb.checked; });
+}
+document.getElementById("itemSelectAll").addEventListener("change", function(){
+  var checked = this.checked;
+  document.querySelectorAll(".item-select-cb").forEach(function(cb){
+    cb.checked = checked;
+    if(checked) selectedItemCodes.add(cb.dataset.code); else selectedItemCodes.delete(cb.dataset.code);
+  });
+  updateLabelSelectionUI();
+});
 document.getElementById("itemSearch").addEventListener("input", renderItems);
 document.getElementById("itemCatFilter").addEventListener("change", renderItems);
 
@@ -2386,6 +2479,8 @@ function renderNewTxDefaults(){
   renderTxLines();
   updatePartyOptions();
   updateFormNoHint();
+  // Not disabled, not greyed out — genuinely not there at all without this permission.
+  document.getElementById("btnScanPhone").style.display = hasPermission("phoneScanning") ? "" : "none";
 }
 document.getElementById("txType").addEventListener("change", updatePartyOptions);
 document.getElementById("txParty").addEventListener("change", updateFieldVisibility);
@@ -2597,6 +2692,75 @@ document.getElementById("btnAddLine").addEventListener("click", function(){
   renderTxLines();
 });
 document.getElementById("btnResetTx").addEventListener("click", renderNewTxDefaults);
+
+// ---------------- BARCODE SCANNING (New Receipt only) — shared by phone camera now, and by a
+// keyboard-wedge scanner gun later, since both just end up here once a code is known. ----------------
+// Fills the first still-empty line if there is one, otherwise bumps an existing line for this same
+// item by one, otherwise adds a fresh line — so scanning the same item twice just increases its
+// quantity instead of creating duplicate rows.
+function processScannedCode(code){
+  var clean = (code||"").trim();
+  if(!clean) return;
+  var item = STATE.items.find(function(i){ return i.code.toUpperCase()===clean.toUpperCase(); });
+  if(!item){
+    toast(tf("t_scan_not_found", clean));
+    return;
+  }
+  var existing = txLines.find(function(l){ return l.itemId===item.code; });
+  if(existing){
+    existing.qty = (Number(existing.qty)||0) + 1;
+  } else {
+    var blank = txLines.find(function(l){ return !l.itemId && !l.codeText && !l.nameText; });
+    if(blank){
+      blank.itemId = item.code; blank.codeText = item.code; blank.nameText = item.name; blank.qty = 1;
+    } else {
+      txLines.push({ itemId:item.code, codeText:item.code, nameText:item.name, qty:1, unitPrice:"" });
+    }
+  }
+  renderTxLines();
+  toast(tf("t_scan_added", item.code, item.name));
+  return item;
+}
+
+var ZXING_LOADED = false;
+async function ensureZXingLoaded(){
+  if(ZXING_LOADED || typeof ZXing !== "undefined"){ ZXING_LOADED = true; return true; }
+  try{
+    await loadScript("https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js");
+    ZXING_LOADED = true;
+    return true;
+  }catch(e){
+    console.error("Failed to load the barcode scanning library:", e);
+    return false;
+  }
+}
+var phoneScanController = null;
+async function openPhoneScan(){
+  if(!requirePermission("phoneScanning")) return;
+  if(!(await ensureZXingLoaded())){ toast(t("t_scan_lib_failed")); return; }
+  document.getElementById("phoneScanLastResult").textContent = "";
+  document.getElementById("phoneScanOverlay").classList.add("show");
+  try{
+    var codeReader = new ZXing.BrowserMultiFormatReader();
+    phoneScanController = codeReader;
+    await codeReader.decodeFromVideoDevice(undefined, "phoneScanVideo", function(result, err){
+      if(result){
+        var item = processScannedCode(result.getText());
+        document.getElementById("phoneScanLastResult").textContent = item ? tf("t_scan_added", item.code, item.name) : tf("t_scan_not_found", result.getText());
+      }
+    });
+  }catch(e){
+    console.error("Camera scan failed to start:", e);
+    toast(t("t_scan_camera_failed"));
+    closePhoneScan();
+  }
+}
+function closePhoneScan(){
+  if(phoneScanController){ try{ phoneScanController.reset(); }catch(e){} phoneScanController = null; }
+  document.getElementById("phoneScanOverlay").classList.remove("show");
+}
+document.getElementById("btnScanPhone").addEventListener("click", openPhoneScan);
+document.getElementById("btnClosePhoneScan").addEventListener("click", closePhoneScan);
 
 document.getElementById("btnSaveTx").addEventListener("click", async function(){
   if(!requirePermission("newReceipt")) return;
@@ -3359,6 +3523,50 @@ function downloadAOAAsExcel(aoa, sheetName, filename){
   XLSX.utils.book_append_sheet(wb, ws, sheetName.slice(0,31)); // Excel's own 31-char sheet-name limit
   XLSX.writeFile(wb, filename);
 }
+
+// ---------------- BARCODE LABEL PRINTING (A4 sheet, prints on a regular printer + sticker paper) ----------------
+var JSBARCODE_LOADED = false;
+async function ensureJsBarcodeLoaded(){
+  if(JSBARCODE_LOADED || typeof JsBarcode !== "undefined"){ JSBARCODE_LOADED = true; return true; }
+  try{
+    await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.5/JsBarcode.all.min.js");
+    JSBARCODE_LOADED = true;
+    return true;
+  }catch(e){
+    console.error("Failed to load the barcode library:", e);
+    return false;
+  }
+}
+async function openLabelPrintModal(){
+  if(!(await ensureJsBarcodeLoaded())){ toast(t("t_barcode_lib_failed")); return; }
+  var codes = [...selectedItemCodes].sort(function(a,b){ return compareCodes(a,b); });
+  var items = codes.map(function(c){ return STATE.items.find(function(i){ return i.code===c; }); }).filter(Boolean);
+  if(items.length===0) return;
+
+  // Sized to match a common, widely-available 21-label A4 sheet (3 columns x 7 rows, ~63.5x38.1mm
+  // each) — the same layout sold under names like Avery L7160/J8160 — so if you ever switch to
+  // pre-cut sticker sheets, this lines up without changing anything.
+  var cellsHtml = items.map(function(i){
+    return '<div class="label-cell">'+
+      '<svg class="label-barcode" data-barcode="'+esc(i.code)+'"></svg>'+
+      '<div class="label-code">'+esc(i.code)+'</div>'+
+      '<div class="label-name">'+esc(i.name)+'</div>'+
+      '</div>';
+  }).join("");
+  document.getElementById("labelSheetPaper").innerHTML = '<div class="label-sheet">'+cellsHtml+'</div>';
+  document.querySelectorAll(".label-barcode").forEach(function(svg){
+    try{
+      JsBarcode(svg, svg.dataset.barcode, { format:"CODE128", displayValue:false, height:34, margin:0 });
+    }catch(e){ console.error("Barcode render failed for", svg.dataset.barcode, e); }
+  });
+  document.getElementById("labelPrintOverlay").classList.add("show");
+}
+document.getElementById("btnPrintLabels").addEventListener("click", openLabelPrintModal);
+document.getElementById("btnCloseLabelPrint").addEventListener("click", function(){
+  document.getElementById("labelPrintOverlay").classList.remove("show");
+});
+document.getElementById("btnPrintLabelSheet").addEventListener("click", function(){ window.print(); });
+
 document.getElementById("btnExportInventory").addEventListener("click", async function(){
   var btn = this; btn.disabled = true;
   if(!(await ensureXLSXLoaded())){ toast(t("t_export_failed")); btn.disabled = false; return; }
@@ -4205,6 +4413,8 @@ var PERMISSIONS = [
   { key:"addItems", label:"perm_add_items" },
   { key:"editItems", label:"perm_edit_items" },
   { key:"deleteItems", label:"perm_delete_items" },
+  { key:"printLabels", label:"perm_print_labels" },
+  { key:"phoneScanning", label:"perm_phone_scanning" },
   { key:"newReceipt", label:"perm_new_receipt" },
   { key:"viewReceipts", label:"perm_view_receipts" },
   { key:"viewAdditionNotes", label:"perm_view_addition_notes" },
