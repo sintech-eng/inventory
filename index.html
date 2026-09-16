@@ -313,7 +313,7 @@
       <div data-i18n="sidebar_note">Everyone who opens this link shares this data.<br>Sintech For Engineering Supplies &amp; Trade</div>
       <button class="btn ghost sm" id="btnLoadFile" style="margin-top:10px; width:100%; color:#fff; border-color:rgba(255,255,255,.3);" data-i18n="btn_load">📂 Load data file</button>
       <input type="file" id="loadFileInput" accept=".html,.json" style="display:none;">
-      <div style="margin-top:10px; font-size:10px; color:rgba(255,255,255,.45); text-align:center;">Build 2026-09-16 20:54 UTC</div>
+      <div style="margin-top:10px; font-size:10px; color:rgba(255,255,255,.45); text-align:center;">Build 2026-09-16 21:11 UTC</div>
     </div>
   </div>
 
@@ -5433,10 +5433,11 @@ document.getElementById("userDeleteBtn").addEventListener("click", async functio
   saveUsers().catch(function(e){ console.error("Background save failed:", e); });
 });
 
-// A fresh device has no local history to trust, so this only ever reveals the app once Firestore
-// has genuinely confirmed the real lock status. A slow or failed connection retries with a real
-// button rather than silently falling back to an unlocked default — that fallback was the
-// original security hole: a 6-second timeout that gave up and showed full access anyway.
+// The one and only boot path now, for every device — this only ever reveals the app once
+// Firestore has genuinely confirmed the real lock status. A slow or failed connection retries
+// with a real button rather than silently falling back to an unlocked default; that fallback,
+// and later a "trust the local cache first" fast path for returning devices, were both real
+// security holes discovered in earlier versions of this app.
 async function attemptFreshSeedConnect(){
   document.getElementById("bootGateMsg").textContent = t("boot_gate_msg");
   document.getElementById("btnBootGateRetry").style.display = "none";
@@ -5472,40 +5473,17 @@ async function boot(){
   document.getElementById("main").style.opacity = "0.4";
   await loadAll();
 
-  if(IS_FRESH_SEED){
-    // This browser has never synced before, so the locked flag we just seeded is a guess, not a
-    // fact — it could easily be hiding a real "locked" from other devices. Never reveal anything,
-    // not even the sign-in screen, on an unconfirmed guess: if the connection is slow or fails,
-    // this keeps retrying and stays on the boot screen rather than quietly falling back to an
-    // unlocked default, which would be a real security hole on a slow first connection.
-    document.getElementById("bootGate").classList.add("show");
-    await attemptFreshSeedConnect();
-    return;
-  }
-
-  // Returning device: local cache already reflects the last confirmed state (it's kept in sync by
-  // every previous visit), so it's safe — and fast — to show it immediately, then quietly refresh
-  // from Firestore in the background exactly as before.
-  await runDataMigrations();
-  applyI18n();
-  applyPermissionUI();
-  checkLockGate();
-  revealAppShell();
-  showView("dashboard");
-  // Everything Firebase-related happens entirely in the background, after the page is already
-  // up and usable — loading the SDK, connecting, and pulling the shared data are all off the
-  // critical path for "the app appears on screen."
-  initFirebase().then(function(ok){
-    if(!ok) return;
-    return bootstrapFirestore().then(function(){
-      return runDataMigrations();
-    }).then(function(){
-      rerenderCurrentView();
-      applyPermissionUI();
-      checkLockGate();
-      startFirestoreListeners();
-    });
-  });
+  // Every device — laptop or phone, first visit or the thousandth — waits for a live, confirmed
+  // Firestore snapshot before anything is revealed. A locally cached "unlocked" status can never
+  // be trusted on its own: if the app was locked from a DIFFERENT device since this one last
+  // synced, showing the dashboard immediately and only correcting it once Firestore catches up —
+  // even for a few seconds on a slow connection — is a real security hole, not a cosmetic delay.
+  // This is exactly how it failed before: a phone on a slower connection showed full, unlocked
+  // access for several seconds using a stale cached "unlocked" flag, before the real "locked"
+  // status from Firestore ever had a chance to arrive and correct it. There is no fast path here
+  // anymore, on purpose — every device now goes through the same confirm-first sequence below.
+  document.getElementById("bootGate").classList.add("show");
+  await attemptFreshSeedConnect();
 }
 boot();
 
