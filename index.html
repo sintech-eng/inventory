@@ -341,7 +341,7 @@
       <div data-i18n="sidebar_note">Everyone who opens this link shares this data.<br>Sintech For Engineering Supplies &amp; Trade</div>
       <button class="btn ghost sm" id="btnLoadFile" style="margin-top:10px; width:100%; color:#fff; border-color:rgba(255,255,255,.3);" data-i18n="btn_load">📂 Load data file</button>
       <input type="file" id="loadFileInput" accept=".html,.json" style="display:none;">
-      <div style="margin-top:10px; font-size:10px; color:rgba(255,255,255,.45); text-align:center;">Build 2026-09-17 11:20 UTC</div>
+      <div style="margin-top:10px; font-size:10px; color:rgba(255,255,255,.45); text-align:center;">Build 2026-09-17 11:54 UTC</div>
     </div>
   </div>
 
@@ -2513,19 +2513,25 @@ document.getElementById("btnAddItem").addEventListener("click", function(){
 });
 // Purely informational — never blocks saving, just surfaces existing items with a similar name
 // live as the person types, so a duplicate is easy to notice and avoid before it's ever created.
-document.getElementById("itemName").addEventListener("input", function(){
-  var q = this.value.trim().toLowerCase();
+// Once a category is also picked, matches narrow to that category alone — "كوع" on its own
+// would pull in elbows from every product line, but selecting Poly first means only Poly elbows
+// show up, which is the actual comparison that matters for catching a real duplicate.
+function updateItemNameMatches(){
+  var q = document.getElementById("itemName").value.trim().toLowerCase();
   var box = document.getElementById("itemNameMatches");
   if(q.length < 2){ box.style.display = "none"; return; }
   var editingCode = document.getElementById("itemEditOriginalCode").value;
+  var category = document.getElementById("itemCategory").value;
   var matches = STATE.items.filter(function(i){
-    return i.code !== editingCode && i.name && i.name.toLowerCase().indexOf(q) >= 0;
+    return i.code !== editingCode && i.name && i.name.toLowerCase().indexOf(q) >= 0 && (!category || i.category === category);
   }).slice(0, 5);
   if(matches.length === 0){ box.style.display = "none"; return; }
   box.innerHTML = '<b>'+t("item_name_matches_hint")+'</b><br>' +
     matches.map(function(i){ return esc(i.code)+' — '+esc(i.name); }).join('<br>');
   box.style.display = "";
-});
+}
+document.getElementById("itemName").addEventListener("input", updateItemNameMatches);
+document.getElementById("itemCategory").addEventListener("change", updateItemNameMatches);
 document.getElementById("itemCancelBtn").addEventListener("click", function(){ document.getElementById("itemModalBackdrop").classList.remove("show"); });
 document.getElementById("itemDeleteBtn").addEventListener("click", async function(){
   if(!requirePermission("deleteItems")) return;
