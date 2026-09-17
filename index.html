@@ -341,7 +341,7 @@
       <div data-i18n="sidebar_note">Everyone who opens this link shares this data.<br>Sintech For Engineering Supplies &amp; Trade</div>
       <button class="btn ghost sm" id="btnLoadFile" style="margin-top:10px; width:100%; color:#fff; border-color:rgba(255,255,255,.3);" data-i18n="btn_load">📂 Load data file</button>
       <input type="file" id="loadFileInput" accept=".html,.json" style="display:none;">
-      <div style="margin-top:10px; font-size:10px; color:rgba(255,255,255,.45); text-align:center;">Build 2026-09-17 10:10 UTC</div>
+      <div style="margin-top:10px; font-size:10px; color:rgba(255,255,255,.45); text-align:center;">Build 2026-09-17 10:45 UTC</div>
     </div>
   </div>
 
@@ -1843,6 +1843,14 @@ function wireDateGroup(container){
         var prev = boxes[idx-1];
         prev.focus();
         prev.setSelectionRange(prev.value.length, prev.value.length);
+      }
+      // Delete resets the whole date in one action, rather than requiring the day, month, and
+      // year to each be cleared separately — a quick, unambiguous "start over" with no leftover
+      // digits from any box that could get missed and silently combine into the wrong date.
+      if(e.key === "Delete"){
+        e.preventDefault();
+        boxes.forEach(function(b){ b.value = ""; });
+        dd.focus();
       }
     });
   });
