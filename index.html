@@ -56,6 +56,8 @@
   #sidebar nav button:hover{ background:rgba(255,255,255,.06); color:#fff; }
   #sidebar nav button.active{ background:var(--copper); color:#fff; font-weight:600; }
   #sidebar .foot{ margin-top:auto; padding:14px 20px 0; font-size:11px; color:#7C90A6; border-top:1px solid rgba(255,255,255,.1); }
+  #btnMobileMenu{ display:none; } /* shown only under the mobile breakpoint below */
+  #mobileNavBackdrop{ display:none; }
 
   /* ---------- MAIN ---------- */
   #main{ flex:1; height:100vh; overflow-y:auto; overflow-x:hidden; padding:26px 30px; padding-top:70px; opacity:0; transition:opacity .15s; }
@@ -93,6 +95,14 @@
     border-radius:var(--radius); background:#fff; color:var(--text);
   }
   input:focus,select:focus,textarea:focus{ outline:2px solid rgba(20,48,77,.25); border-color:var(--navy); }
+  /* Three small boxes instead of one slash-formatted field — day, month, year are each simple,
+     independent, fixed-length numbers with nothing to reformat around a moving cursor, so there's
+     no shared text position to ever get out of sync with what was actually typed. */
+  .date-group{ display:inline-flex; align-items:center; gap:3px; }
+  .date-group input{ width:2.6em; padding:8px 4px; text-align:center; -moz-appearance:textfield; }
+  .date-group input.date-yyyy{ width:3.8em; }
+  .date-group input::-webkit-outer-spin-button, .date-group input::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
+  .date-group span{ color:var(--muted); }
   .search{ flex:1; min-width:180px; }
   button.btn{
     all:unset; cursor:pointer; padding:8px 14px; border-radius:var(--radius);
@@ -187,12 +197,10 @@
   #itemCardPaper table.rc-table{ width:auto; min-width:100%; } /* lets it grow to fit real content instead of squeezing every column to fit the modal */
   #itemCardPaper .ic-cell{ min-width:56px; box-sizing:border-box; padding:4px 3px; }
   #itemCardPaper input.ic-formno.ic-cell{ min-width:88px; }
-  #itemCardPaper input.ic-date.ic-cell{ min-width:112px; }
   #itemCardPaper input.ic-qty.ic-cell, #itemCardPaper input.ic-price.ic-cell{ min-width:56px; }
   #itemCardPaper .rc-table th, #itemCardPaper .rc-table td{ padding:5px 4px; font-size:12px; }
   table.rc-table th, table.rc-table td{ border:1px solid var(--text); padding:6px 8px; font-size:12.5px; }
   .ic-cell{ width:100%; border:1px solid #C8D3DD; background:#FFFDF0; padding:4px 5px; font-size:12.5px; text-align:center; border-radius:3px; font-family:inherit; cursor:text; }
-  .ic-date{ min-width:118px; } /* enough room for "dd/mm/yyyy" to stay fully readable while typing */
   .ic-cell:hover{ border-color:var(--copper); }
   .ic-cell:focus{ border-color:var(--copper); border-width:2px; background:#fff; outline:none; }
   input.ic-formno::placeholder{ color:#B0552A; opacity:.8; font-style:italic; }
@@ -224,17 +232,34 @@
     body{ height:auto; overflow:auto; }
     html{ height:auto; }
     #app{ flex-direction:column; height:auto; min-height:100vh; }
-    #sidebar{ width:100%; flex:none; flex-direction:row; overflow-x:auto; overflow-y:visible; padding:10px; align-items:center; height:auto; }
-    #sidebar .brand{ display:none; }
-    #sidebar nav{ flex-direction:row; padding:0; }
-    #sidebar .foot{ display:none; }
+    /* The sidebar becomes a slide-in drawer instead of a cramped horizontal scroll-bar of nav
+       buttons — off-screen by default, slides into view over the page when the menu button is
+       tapped, exactly like the desktop sidebar's own vertical list once it's open. */
+    #sidebar{
+      position:fixed; top:0; left:0; height:100vh; width:250px; max-width:80vw;
+      flex-direction:column; padding:20px 0; overflow-y:auto; z-index:280;
+      transform:translateX(-100%); transition:transform .25s ease; box-shadow:2px 0 20px rgba(0,0,0,.25);
+    }
+    #sidebar.open{ transform:translateX(0); }
+    #sidebar .brand{ display:block; }
+    #sidebar nav{ flex-direction:column; padding:0 10px; }
+    #sidebar .foot{ display:block; }
+    html[dir="rtl"] #sidebar{ left:auto; right:0; transform:translateX(100%); box-shadow:-2px 0 20px rgba(0,0,0,.25); }
+    html[dir="rtl"] #sidebar.open{ transform:translateX(0); }
+    #btnMobileMenu{
+      display:flex; position:fixed; top:8px; left:8px; z-index:60; align-items:center; justify-content:center;
+      width:38px; height:38px; border:none; border-radius:50%; background:var(--navy); color:#fff;
+      font-size:18px; cursor:pointer; box-shadow:0 4px 14px rgba(0,0,0,.18);
+    }
+    #mobileNavBackdrop{ display:none; position:fixed; inset:0; background:rgba(10,20,30,.5); z-index:270; }
+    #mobileNavBackdrop.show{ display:block; }
     #topBar{ top:8px; right:8px; padding:5px 6px; gap:6px; }
     #topCover{ display:none; }
     #topBar .btn{ padding:6px 10px; font-size:12px; }
     #langToggle button img{ width:20px; }
     .cards{ grid-template-columns:repeat(2,1fr); }
     .grid2,.grid3{ grid-template-columns:1fr; }
-    #main{ height:auto; overflow-y:visible; padding:16px; padding-top:52px; }
+    #main{ height:auto; overflow-y:visible; padding:16px; padding-top:56px; }
     .view-header, .sticky-head{ position:static; padding-bottom:0; margin-bottom:0; }
     /* Below 16px, iOS Safari auto-zooms the whole page on focus — jarring on every single tap
        into a field. Desktop keeps the compact 13px; this only widens it where it actually matters. */
@@ -278,6 +303,9 @@
 </head>
 <body>
 
+<button id="btnMobileMenu" aria-label="Menu">☰</button>
+<div id="mobileNavBackdrop"></div>
+
 <div id="topBar">
   <div id="signedInIndicator" style="display:none; align-items:center; gap:6px; color:#fff; font-size:11.5px;">
     <span id="signedInName"></span>
@@ -313,7 +341,7 @@
       <div data-i18n="sidebar_note">Everyone who opens this link shares this data.<br>Sintech For Engineering Supplies &amp; Trade</div>
       <button class="btn ghost sm" id="btnLoadFile" style="margin-top:10px; width:100%; color:#fff; border-color:rgba(255,255,255,.3);" data-i18n="btn_load">📂 Load data file</button>
       <input type="file" id="loadFileInput" accept=".html,.json" style="display:none;">
-      <div style="margin-top:10px; font-size:10px; color:rgba(255,255,255,.45); text-align:center;">Build 2026-09-16 21:11 UTC</div>
+      <div style="margin-top:10px; font-size:10px; color:rgba(255,255,255,.45); text-align:center;">Build 2026-09-17 10:10 UTC</div>
     </div>
   </div>
 
@@ -404,7 +432,13 @@
           </div>
           <div class="field">
             <label data-i18n="lbl_date">Date</label>
-            <input id="txDate" type="text" inputmode="numeric" placeholder="dd/mm/yyyy" maxlength="10">
+            <span class="date-group" id="txDateGroup">
+              <input type="text" inputmode="numeric" maxlength="2" class="date-dd" placeholder="dd">
+              <span>/</span>
+              <input type="text" inputmode="numeric" maxlength="2" class="date-mm" placeholder="mm">
+              <span>/</span>
+              <input type="text" inputmode="numeric" maxlength="4" class="date-yyyy" placeholder="yyyy">
+            </span>
           </div>
           <div class="field">
             <label data-i18n="lbl_recipient">Received By</label>
@@ -747,6 +781,7 @@
       <div class="field"><label data-i18n="lbl_unit">Unit</label><select id="itemUnit"></select></div>
     </div>
     <div class="row"><div class="field"><label data-i18n="lbl_name">Name</label><input id="itemName" data-i18n-ph="ph_item_name" placeholder="Item name"></div></div>
+    <div id="itemNameMatches" class="no-print" style="display:none; margin:-8px 0 12px; padding:8px 10px; background:#FFF8E8; border:1px solid #F0DCA0; border-radius:6px; font-size:12px;"></div>
     <div class="row"><div class="field"><label data-i18n="lbl_category">Category</label><select id="itemCategory"></select></div></div>
     <div class="row"><div class="field"><label data-i18n="lbl_cost">Purchase Price (optional)</label><input id="itemCost" type="number" step="0.01" placeholder="—"></div></div>
     <div class="row" id="itemOpeningQtyField"><div class="field"><label data-i18n="lbl_opening_qty">Starting Quantity (optional)</label><input id="itemOpeningQty" type="number" step="any" placeholder="0"></div></div>
@@ -836,7 +871,15 @@
         <label id="editRcClientLbl" data-i18n="lbl_party_name_client">Company Name</label>
         <select id="editRcClientName"><option value="" data-i18n="opt_select_party">— Select —</option></select>
       </div>
-      <div class="field"><label data-i18n="lbl_date">Date</label><input id="editRcDate" type="text" inputmode="numeric" placeholder="dd/mm/yyyy" maxlength="10"></div>
+      <div class="field"><label data-i18n="lbl_date">Date</label>
+        <span class="date-group" id="editRcDateGroup">
+          <input type="text" inputmode="numeric" maxlength="2" class="date-dd" placeholder="dd">
+          <span>/</span>
+          <input type="text" inputmode="numeric" maxlength="2" class="date-mm" placeholder="mm">
+          <span>/</span>
+          <input type="text" inputmode="numeric" maxlength="4" class="date-yyyy" placeholder="yyyy">
+        </span>
+      </div>
       <div class="field"><label data-i18n="lbl_recipient">Received By</label><input id="editRcRecipient"></div>
     </div>
     <div style="overflow-x:auto;">
@@ -1160,6 +1203,7 @@ var I18N = {
 
     t_code_name_required:"Code and name are required",
     t_code_exists:"This code is already used", t_category_required:"Please select a category", opt_select_category:"— Select a category —", opt_select_party:"— Select —", opt_select_user:"— Select your name —",
+    item_name_matches_hint:"Items with a similar name already exist:",
     t_code_format:"Code must look like ABC-00123 (letters, dash, 5-digit number)",
     t_saved:"Saved",
     t_party_required:"Party name is required",
@@ -1356,6 +1400,7 @@ var I18N = {
 
     t_code_name_required:"الكود والاسم مطلوبان",
     t_code_exists:"هذا الكود مستخدم بالفعل", t_category_required:"يرجى اختيار فئة", opt_select_category:"— اختر فئة —", opt_select_party:"— اختر —", opt_select_user:"— اختر اسمك —",
+    item_name_matches_hint:"توجد أصناف بأسماء مشابهة بالفعل:",
     t_code_format:"يجب أن يكون الكود بصيغة ABC-00123 (حروف، شرطة، ثم 5 أرقام)",
     t_saved:"تم الحفظ",
     t_party_required:"اسم الجهة مطلوب",
@@ -1552,6 +1597,7 @@ var I18N = {
 
     t_code_name_required:"Kod ve isim gereklidir",
     t_code_exists:"Bu kod zaten kullanılıyor", t_category_required:"Lütfen bir kategori seçin", opt_select_category:"— Bir kategori seçin —", opt_select_party:"— Seçin —", opt_select_user:"— Adınızı seçin —",
+    item_name_matches_hint:"Benzer isimli ürünler zaten var:",
     t_code_format:"Kod ABC-00123 biçiminde olmalı (harfler, tire, 5 haneli sayı)",
     t_saved:"Kaydedildi",
     t_party_required:"Taraf adı gereklidir",
@@ -1779,33 +1825,40 @@ function todayISO(){
   var d = new Date();
   return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
 }
-// A plain text field standing in for a native date input, always shown and always read as
-// dd/mm/yyyy, no matter what the browser's own language is set to — a native <input type="date">
-// picks its placeholder from the browser's locale, not the page, and that can't be overridden
-// from here, which is exactly what was showing Turkish "gg.aa.yyyy" regardless of the app's own
-// language. Storage stays exactly as before (ISO "yyyy-mm-dd") everywhere else in the app; these
-// two functions are the only place that ever needs to know a second format exists.
-function isoToDisplayDate(iso){
-  var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso||"");
-  return m ? (m[3]+"/"+m[2]+"/"+m[1]) : "";
-}
-function displayToIsoDate(display){
-  var m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec((display||"").trim());
-  if(!m) return "";
-  var day = parseInt(m[1],10), month = parseInt(m[2],10), year = parseInt(m[3],10);
-  if(month<1 || month>12 || day<1 || day>31 || year<1900 || year>2100) return "";
-  return m[3]+"-"+m[2]+"-"+m[1]; // year-MONTH-day — m[1] is the day group, m[2] is the month group
-}
-// Auto-inserts the two slashes as digits are typed, so "15062026" becomes "15/06/2026" without
-// the person having to type the separators themselves.
-function wireDateMask(input){
-  input.addEventListener("input", function(){
-    var digits = input.value.replace(/[^\d]/g,"").slice(0,8);
-    var out = digits.slice(0,2);
-    if(digits.length>2) out += "/"+digits.slice(2,4);
-    if(digits.length>4) out += "/"+digits.slice(4,8);
-    input.value = out;
+// Three independent, fixed-length digit boxes (day/month/year) instead of one slash-formatted
+// text field. A single field needs to track where the cursor sits relative to auto-inserted
+// slashes every time a digit goes in or out, and that turned out to be fragile in ways that kept
+// surfacing as "typing a date doesn't work right." Three small boxes sidestep the whole problem:
+// each one is just a plain number with a max length, nothing to reformat around a moving cursor.
+function wireDateGroup(container){
+  var dd = container.querySelector(".date-dd"), mm = container.querySelector(".date-mm"), yyyy = container.querySelector(".date-yyyy");
+  var boxes = [dd, mm, yyyy];
+  boxes.forEach(function(box, idx){
+    box.addEventListener("input", function(){
+      box.value = box.value.replace(/[^\d]/g, "").slice(0, box.maxLength);
+      if(box.value.length === box.maxLength && idx < boxes.length-1) boxes[idx+1].focus();
+    });
+    box.addEventListener("keydown", function(e){
+      if(e.key === "Backspace" && box.value === "" && idx > 0){
+        var prev = boxes[idx-1];
+        prev.focus();
+        prev.setSelectionRange(prev.value.length, prev.value.length);
+      }
+    });
   });
+}
+function getDateGroupIso(container){
+  var dd = container.querySelector(".date-dd").value, mm = container.querySelector(".date-mm").value, yyyy = container.querySelector(".date-yyyy").value;
+  if(dd.length!==2 || mm.length!==2 || yyyy.length!==4) return "";
+  var d = parseInt(dd,10), m = parseInt(mm,10), y = parseInt(yyyy,10);
+  if(m<1 || m>12 || d<1 || d>31 || y<1900 || y>2100) return "";
+  return yyyy+"-"+mm+"-"+dd;
+}
+function setDateGroupIso(container, iso){
+  var match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso||"");
+  container.querySelector(".date-dd").value = match ? match[3] : "";
+  container.querySelector(".date-mm").value = match ? match[2] : "";
+  container.querySelector(".date-yyyy").value = match ? match[1] : "";
 }
 
 var IS_FRESH_SEED = false; // true only when local storage was empty — the one case where we can't
@@ -2114,8 +2167,20 @@ function rerenderCurrentView(){
 }
 document.getElementById("navButtons").addEventListener("click", function(e){
   var b = e.target.closest("button[data-view]");
-  if(b) showView(b.dataset.view);
+  if(b){ showView(b.dataset.view); closeMobileNav(); }
 });
+// Mobile-only slide-in drawer for the sidebar — opening/closing here is harmless on desktop too,
+// since the drawer CSS only takes effect under the mobile breakpoint in the first place.
+function openMobileNav(){
+  document.getElementById("sidebar").classList.add("open");
+  document.getElementById("mobileNavBackdrop").classList.add("show");
+}
+function closeMobileNav(){
+  document.getElementById("sidebar").classList.remove("open");
+  document.getElementById("mobileNavBackdrop").classList.remove("show");
+}
+document.getElementById("btnMobileMenu").addEventListener("click", openMobileNav);
+document.getElementById("mobileNavBackdrop").addEventListener("click", closeMobileNav);
 
 // ---------------- DASHBOARD ----------------
 function renderDashboard(){
@@ -2431,11 +2496,27 @@ function openItemModal(code){
   document.getElementById("itemOpeningQtyField").style.display = editing ? "none" : "";
   document.getElementById("itemOpeningQty").value = "";
   populateCatFilter();
+  document.getElementById("itemNameMatches").style.display = "none";
   document.getElementById("itemModalBackdrop").classList.add("show");
 }
 document.getElementById("btnAddItem").addEventListener("click", function(){
   if(!requirePermission("addItems")) return;
   openItemModal(null);
+});
+// Purely informational — never blocks saving, just surfaces existing items with a similar name
+// live as the person types, so a duplicate is easy to notice and avoid before it's ever created.
+document.getElementById("itemName").addEventListener("input", function(){
+  var q = this.value.trim().toLowerCase();
+  var box = document.getElementById("itemNameMatches");
+  if(q.length < 2){ box.style.display = "none"; return; }
+  var editingCode = document.getElementById("itemEditOriginalCode").value;
+  var matches = STATE.items.filter(function(i){
+    return i.code !== editingCode && i.name && i.name.toLowerCase().indexOf(q) >= 0;
+  }).slice(0, 5);
+  if(matches.length === 0){ box.style.display = "none"; return; }
+  box.innerHTML = '<b>'+t("item_name_matches_hint")+'</b><br>' +
+    matches.map(function(i){ return esc(i.code)+' — '+esc(i.name); }).join('<br>');
+  box.style.display = "";
 });
 document.getElementById("itemCancelBtn").addEventListener("click", function(){ document.getElementById("itemModalBackdrop").classList.remove("show"); });
 document.getElementById("itemDeleteBtn").addEventListener("click", async function(){
@@ -2535,7 +2616,7 @@ var newTxFormInitialized = false; // renderNewTxDefaults() fully resets the form
   // navigating away and back mid-entry would silently wipe out whatever was already typed in.
 
 function renderNewTxDefaults(){
-  document.getElementById("txDate").value = isoToDisplayDate(todayISO());
+  setDateGroupIso(document.getElementById("txDateGroup"), todayISO());
   document.getElementById("txFormNo").value = String(STATE.meta.formCounter);
   document.getElementById("txSupplierRefNo").value = "";
   document.getElementById("txSupplierInvoiceNo").value = "";
@@ -2551,8 +2632,8 @@ function renderNewTxDefaults(){
   document.getElementById("btnScanPhone").style.display = hasPermission("phoneScanning") ? "" : "none";
 }
 document.getElementById("txType").addEventListener("change", updatePartyOptions);
-wireDateMask(document.getElementById("txDate"));
-wireDateMask(document.getElementById("editRcDate"));
+wireDateGroup(document.getElementById("txDateGroup"));
+wireDateGroup(document.getElementById("editRcDateGroup"));
 document.getElementById("txParty").addEventListener("change", updateFieldVisibility);
 document.getElementById("txFormNo").addEventListener("input", updateFormNoHint);
 function updateFormNoHint(){
@@ -2855,7 +2936,7 @@ document.getElementById("btnSaveTx").addEventListener("click", async function(){
   var supplierRefNo = document.getElementById("txSupplierRefNo").value.trim();
   var supplierInvoiceNo = document.getElementById("txSupplierInvoiceNo").value.trim();
   var formNo = document.getElementById("txFormNo").value.trim();
-  var date = displayToIsoDate(document.getElementById("txDate").value);
+  var date = getDateGroupIso(document.getElementById("txDateGroup"));
   var recipient = document.getElementById("txRecipient").value.trim();
   var notes = document.getElementById("txNotes").value.trim();
 
@@ -3046,7 +3127,7 @@ function openEditReceiptModal(txId){
     document.getElementById("editRcClientName").value = tx.partyName || "";
   }
   updateFieldVisibilityFor("editRc"); // populates both selects, keeping whichever value was just set above
-  document.getElementById("editRcDate").value = isoToDisplayDate(tx.date);
+  setDateGroupIso(document.getElementById("editRcDateGroup"), tx.date);
   document.getElementById("editRcRecipient").value = tx.recipientName || "";
   document.getElementById("editRcNotes").value = tx.notes || "";
   editRcLines = tx.lines.map(function(l){
@@ -3157,7 +3238,7 @@ document.getElementById("editReceiptSaveBtn").addEventListener("click", async fu
   var partyType = resolved.partyType, inSubType = resolved.inSubType, partyName = resolved.partyName;
   var supplierRefNo = document.getElementById("editRcSupplierRefNo").value.trim();
   var supplierInvoiceNo = document.getElementById("editRcSupplierInvoiceNo").value.trim();
-  var date = displayToIsoDate(document.getElementById("editRcDate").value);
+  var date = getDateGroupIso(document.getElementById("editRcDateGroup"));
   var recipient = document.getElementById("editRcRecipient").value.trim();
   var notes = document.getElementById("editRcNotes").value.trim();
   if(!partyName){ toast(t("t_party_required")); return; }
@@ -4315,7 +4396,14 @@ function openItemCard(code){
     var dateCell, formNoCell, priceCell, noteCell, typeCell;
     var qtyCells = { "return":"", "normal":"", "internal":"", "external":"" };
     if(canEdit){
-      dateCell = '<input type="text" inputmode="numeric" class="ic-cell ic-date" lang="en-GB" placeholder="dd/mm/yyyy" maxlength="10" '+cellRef+' value="'+esc(isoToDisplayDate(r.date))+'">';
+      var dm = /^(\d{4})-(\d{2})-(\d{2})$/.exec(r.date||"");
+      dateCell = '<span class="date-group ic-cell" '+cellRef+' style="border:none; padding:0;">'+
+        '<input type="text" inputmode="numeric" maxlength="2" class="date-dd" value="'+(dm?dm[3]:"")+'" style="min-width:2.2em; padding:4px 2px;">'+
+        '<span>/</span>'+
+        '<input type="text" inputmode="numeric" maxlength="2" class="date-mm" value="'+(dm?dm[2]:"")+'" style="min-width:2.2em; padding:4px 2px;">'+
+        '<span>/</span>'+
+        '<input type="text" inputmode="numeric" maxlength="4" class="date-yyyy" value="'+(dm?dm[1]:"")+'" style="min-width:3.2em; padding:4px 2px;">'+
+        '</span>';
       formNoCell = '<input type="text" class="ic-cell ic-formno mono" '+cellRef+' value="'+(isPlaceholderNo?"":esc(r.formNo))+'" placeholder="'+t("itemcard_missing_no")+'">';
       priceCell = '<input type="number" step="0.01" class="ic-cell ic-price" '+cellRef+' value="'+(r.unitPrice!=null?Number(r.unitPrice):"")+'">';
       if(whichQtyCol) qtyCells[whichQtyCol] = '<input type="number" step="any" class="ic-cell ic-qty" '+cellRef+' value="'+r.qty+'">';
@@ -4424,9 +4512,9 @@ function wireItemCardCells(){
   paper.querySelectorAll(".ic-formno").forEach(function(inp){
     inp.addEventListener("change", function(){ commitLineFormNo(inp.dataset.txid, Number(inp.dataset.lineidx), inp.value.trim()); });
   });
-  paper.querySelectorAll(".ic-date").forEach(function(inp){
-    wireDateMask(inp);
-    inp.addEventListener("change", function(){ commitLineDate(inp.dataset.txid, displayToIsoDate(inp.value)); });
+  paper.querySelectorAll(".date-group.ic-cell").forEach(function(group){
+    wireDateGroup(group);
+    group.addEventListener("change", function(){ commitLineDate(group.dataset.txid, getDateGroupIso(group)); });
   });
   paper.querySelectorAll(".ic-price").forEach(function(inp){
     inp.addEventListener("change", function(){ commitLinePrice(inp.dataset.txid, Number(inp.dataset.lineidx), inp.value); });
@@ -4787,6 +4875,7 @@ document.getElementById("signinPin").addEventListener("input", function(){
 document.getElementById("btnSignOut").addEventListener("click", function(){
   if(currentUser) logActivity("signout", t("log_signed_out"));
   currentUser = null;
+  closeMobileNav();
   applyPermissionUI();
   checkLockGate();
 });
