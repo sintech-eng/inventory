@@ -341,7 +341,7 @@
       <div data-i18n="sidebar_note">Everyone who opens this link shares this data.<br>Sintech For Engineering Supplies &amp; Trade</div>
       <button class="btn ghost sm" id="btnLoadFile" style="margin-top:10px; width:100%; color:#fff; border-color:rgba(255,255,255,.3);" data-i18n="btn_load">📂 Load data file</button>
       <input type="file" id="loadFileInput" accept=".html,.json" style="display:none;">
-      <div style="margin-top:10px; font-size:10px; color:rgba(255,255,255,.45); text-align:center;">Build 2026-09-17 10:45 UTC</div>
+      <div style="margin-top:10px; font-size:10px; color:rgba(255,255,255,.45); text-align:center;">Build 2026-09-17 11:20 UTC</div>
     </div>
   </div>
 
@@ -4368,15 +4368,18 @@ function openItemCard(code){
 
   var balance = 0;
   var avgCost = null; // weighted average cost per unit of what's currently on hand
+  var partyKindsMap = buildPartyKindsMap(); // one pass shared by every row below, not one per row
   var bodyRows = rows.map(function(r, idx){
     var isReturn = r.isReturn;
     var isOpening = r.formNo === "OPENING";
     var isNoReceipt = String(r.formNo).indexOf("NO-RECEIPT") === 0;
     var isPlaceholderNo = isOpening || isNoReceipt; // no real individual receipt number yet — show blank + hint
-    // Notes always reflect who the movement was from/to — the opening page gets its own friendly
-    // label, an unreceipted line stays blank until it has a real page, and everything else shows
-    // that page's party name (never the old free-text reason).
-    var effectiveNote = isOpening ? t("itemcard_opening") : (isNoReceipt ? "" : r.partyName);
+    // A real receipt's party belongs to the whole page — every line on it shares the same
+    // supplier/client/project, so it's read from the transaction itself. An opening-balance line
+    // or a quick no-receipt adjustment has no shared page to inherit a party from, so those two
+    // keep their own independent value on the line itself instead.
+    var isPerLineNote = isOpening || isNoReceipt;
+    var effectiveNote = isPerLineNote ? (r.note || "") : r.partyName;
     var cellRef = 'data-txid="'+esc(r.txId)+'" data-lineidx="'+r.lineIndex+'"';
 
     var whichQtyCol = (r.type==="IN" && isReturn) ? "return" : (r.type==="IN" && !isReturn) ? "normal" :
@@ -4406,18 +4409,36 @@ function openItemCard(code){
     if(canEdit){
       var dm = /^(\d{4})-(\d{2})-(\d{2})$/.exec(r.date||"");
       dateCell = '<span class="date-group ic-cell" '+cellRef+' style="border:none; padding:0;">'+
-        '<input type="text" inputmode="numeric" maxlength="2" class="date-dd" value="'+(dm?dm[3]:"")+'" style="min-width:2.2em; padding:4px 2px;">'+
+        '<input type="text" inputmode="numeric" maxlength="2" class="date-dd" placeholder="dd" value="'+(dm?dm[3]:"")+'" style="min-width:2.2em; padding:4px 2px;">'+
         '<span>/</span>'+
-        '<input type="text" inputmode="numeric" maxlength="2" class="date-mm" value="'+(dm?dm[2]:"")+'" style="min-width:2.2em; padding:4px 2px;">'+
+        '<input type="text" inputmode="numeric" maxlength="2" class="date-mm" placeholder="mm" value="'+(dm?dm[2]:"")+'" style="min-width:2.2em; padding:4px 2px;">'+
         '<span>/</span>'+
-        '<input type="text" inputmode="numeric" maxlength="4" class="date-yyyy" value="'+(dm?dm[1]:"")+'" style="min-width:3.2em; padding:4px 2px;">'+
+        '<input type="text" inputmode="numeric" maxlength="4" class="date-yyyy" placeholder="yyyy" value="'+(dm?dm[1]:"")+'" style="min-width:3.2em; padding:4px 2px;">'+
         '</span>';
       formNoCell = '<input type="text" class="ic-cell ic-formno mono" '+cellRef+' value="'+(isPlaceholderNo?"":esc(r.formNo))+'" placeholder="'+t("itemcard_missing_no")+'">';
       priceCell = '<input type="number" step="0.01" class="ic-cell ic-price" '+cellRef+' value="'+(r.unitPrice!=null?Number(r.unitPrice):"")+'">';
       if(whichQtyCol) qtyCells[whichQtyCol] = '<input type="number" step="any" class="ic-cell ic-qty" '+cellRef+' value="'+r.qty+'">';
-      noteCell = isOpening
-        ? '<span style="color:var(--muted);">'+esc(effectiveNote)+'</span>'
-        : '<input type="text" class="ic-cell ic-note" '+cellRef+' value="'+esc(effectiveNote)+'" placeholder="'+t("itemcard_missing_no")+'">';
+      // The 4 movement kinds map onto the 3 party roles the exact same way New/Edit Receipt
+      // already filters them — a return only makes sense as coming back from a project, an
+      // internal-use line only makes sense going to a project, a sale only to a client, and a
+      // normal receipt only from a supplier. This is exactly what keeps a supplier like "Bytech"
+      // from ever showing up as an option on an outgoing-internal line, and vice versa.
+      var noteAllowedKinds = { normal:["supplier"], "return":["project"], internal:["project"], external:["client"] }[whichQtyCol] || null;
+      var noteDirectory = (STATE.partyDirectory||[]).slice().sort(function(a,b){ return a.name.localeCompare(b.name); });
+      if(noteAllowedKinds){
+        noteDirectory = noteDirectory.filter(function(p){
+          var kinds = partyKinds(p.name, partyKindsMap);
+          return noteAllowedKinds.some(function(k){ return kinds[k]; });
+        });
+      }
+      var noteValue = isPerLineNote && !r.note ? (isOpening ? "__OPENING__" : "") : effectiveNote;
+      var noteKnown = noteValue==="" || noteValue==="__OPENING__" || noteDirectory.some(function(p){ return p.name===noteValue; });
+      noteCell = '<select class="ic-cell ic-note" '+cellRef+'>'+
+        '<option value=""'+(noteValue===""?' selected':'')+'>'+t("opt_select_party")+'</option>'+
+        '<option value="__OPENING__"'+(noteValue==="__OPENING__"?' selected':'')+'>'+t("itemcard_opening")+'</option>'+
+        noteDirectory.map(function(p){ return '<option value="'+esc(p.name)+'"'+(p.name===noteValue?' selected':'')+'>'+esc(p.name)+'</option>'; }).join("")+
+        (!noteKnown ? '<option value="'+esc(noteValue)+'" selected>'+esc(noteValue)+'</option>' : "")+
+        '</select>';
       typeCell = '<select class="ic-cell ic-type" '+cellRef+'>'+
         ['received','returned','internal','sold'].map(function(c){ return '<option value="'+c+'"'+(c===currentClass?' selected':'')+'>'+t("class_"+c)+'</option>'; }).join("")+
         '</select>';
@@ -4426,7 +4447,7 @@ function openItemCard(code){
       formNoCell = isPlaceholderNo ? "—" : esc(r.formNo);
       priceCell = (r.unitPrice!=null ? Number(r.unitPrice).toFixed(2) : "");
       if(whichQtyCol) qtyCells[whichQtyCol] = r.qty;
-      noteCell = esc(effectiveNote);
+      noteCell = esc((isPerLineNote && !r.note && isOpening) ? t("itemcard_opening") : effectiveNote);
       typeCell = t("class_"+currentClass);
     }
 
@@ -4606,14 +4627,27 @@ async function commitLineQty(txId, lineIndex, newQtyRaw){
   toast(t("t_saved"));
   saveTx().catch(function(e){ console.error("Background save failed:", e); });
 }
-async function commitLineNote(txId, lineIndex, newNote){
+async function commitLineNote(txId, lineIndex, newNoteRaw){
   if(!requirePermission("editItems")){ refreshItemCardIfOpen(); return; }
   var tx = STATE.tx.find(function(x){ return x.id===txId; });
   if(!tx) return;
   var line = tx.lines[lineIndex];
   if(!line) return;
-  if((line.note||"") === newNote) return;
-  line.note = newNote;
+  var isOpening = tx.formNo === "OPENING";
+  var isNoReceipt = String(tx.formNo).indexOf("NO-RECEIPT") === 0;
+  var newNote = (newNoteRaw === "__OPENING__") ? "" : newNoteRaw; // the sentinel just means "use the default Opening Balance label" — an explicit empty override, not a real party name to store
+  if(isOpening || isNoReceipt){
+    // Independent, per-line value — an opening-balance or no-receipt line has no shared receipt
+    // page to inherit a party from, so each one keeps its own.
+    if((line.note||"") === newNote) return;
+    line.note = newNote;
+  } else {
+    // A real receipt's party belongs to the whole page, exactly like Edit Receipt already treats
+    // it — every line on that page shares the same supplier/client/project, so changing it here
+    // updates the transaction itself rather than just this one line.
+    if((tx.partyName||"") === newNote) return;
+    tx.partyName = newNote;
+  }
   logActivity("item_card_line_edit", tf("log_line_note_set", line.code));
   refreshItemCardIfOpen();
   toast(t("t_saved"));
